@@ -256,36 +256,58 @@ export default async function HomePage() {
       )}
 
       {/* ===== Data at a Glance — real numbers ===== */}
-      <section className="border-y border-slate-200 bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
-            <div className="text-center">
-              <p className="text-3xl font-bold text-slate-900 tabular-nums">
-                {carRaffleCount}
-              </p>
-              <p className="mt-1 text-sm text-slate-500">Car Raffles Live</p>
+      <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900">
+        {/* Subtle dot pattern */}
+        <div className="absolute inset-0 opacity-[0.04]" style={{
+          backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
+          backgroundSize: '20px 20px',
+        }} />
+        <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 gap-6 sm:grid-cols-4 lg:gap-8">
+            {/* Car Raffles */}
+            <div className="relative rounded-2xl border border-white/10 bg-white/[0.05] p-6 backdrop-blur-sm">
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/20">
+                <BarChart3 className="h-5 w-5 text-blue-400" />
+              </div>
+              <p className="text-3xl font-bold text-white tabular-nums">{carRaffleCount}</p>
+              <p className="mt-1 text-sm text-slate-400">Car Raffles Live</p>
             </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-slate-900 tabular-nums">
-                &pound;{totalPrizeValuePounds.toLocaleString()}
+            {/* Prize Value */}
+            <div className="relative rounded-2xl border border-white/10 bg-white/[0.05] p-6 backdrop-blur-sm">
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/20">
+                <TrendingUp className="h-5 w-5 text-amber-400" />
+              </div>
+              <p className="text-3xl font-bold text-white tabular-nums">
+                &pound;{totalPrizeValuePounds > 1_000_000
+                  ? `${(totalPrizeValuePounds / 1_000_000).toFixed(1)}M`
+                  : totalPrizeValuePounds.toLocaleString()}
               </p>
-              <p className="mt-1 text-sm text-slate-500">Total Prize Value Tracked</p>
+              <p className="mt-1 text-sm text-slate-400">Prize Value Tracked</p>
             </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-slate-900 tabular-nums">
+            {/* Tickets */}
+            <div className="relative rounded-2xl border border-white/10 bg-white/[0.05] p-6 backdrop-blur-sm">
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/20">
+                <Eye className="h-5 w-5 text-emerald-400" />
+              </div>
+              <p className="text-3xl font-bold text-white tabular-nums">
                 {totalTicketsMonitored > 1_000_000
                   ? `${(totalTicketsMonitored / 1_000_000).toFixed(1)}M`
                   : totalTicketsMonitored.toLocaleString()}
               </p>
-              <p className="mt-1 text-sm text-slate-500">Tickets Monitored</p>
+              <p className="mt-1 text-sm text-slate-400">Tickets Monitored</p>
             </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-slate-900 tabular-nums">3h</p>
-              <p className="mt-1 text-sm text-slate-500">Update Frequency</p>
+            {/* Frequency */}
+            <div className="relative rounded-2xl border border-white/10 bg-white/[0.05] p-6 backdrop-blur-sm">
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-violet-500/20">
+                <RefreshCw className="h-5 w-5 text-violet-400" />
+              </div>
+              <p className="text-3xl font-bold text-white tabular-nums">3h</p>
+              <p className="mt-1 text-sm text-slate-400">Update Frequency</p>
             </div>
           </div>
           {lastUpdated && (
-            <p className="mt-6 text-center text-xs text-slate-400">
+            <div className="mt-6 flex items-center justify-center gap-2 text-xs text-slate-500">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
               Data last refreshed{' '}
               {(() => {
                 const mins = Math.round(
@@ -296,7 +318,7 @@ export default async function HomePage() {
                 const hrs = Math.round(mins / 60);
                 return `${hrs} hour${hrs === 1 ? '' : 's'} ago`;
               })()}
-            </p>
+            </div>
           )}
         </div>
       </section>
@@ -308,41 +330,53 @@ export default async function HomePage() {
             How CarRaffleOdds Works
           </h2>
           <p className="mt-2 text-slate-500 max-w-2xl mx-auto">
-            We do the research so you don&apos;t have to
+            Three steps to smarter raffle decisions
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
-          <div className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-              <BarChart3 className="h-6 w-6" />
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+          {/* Step 1 */}
+          <div className="group relative rounded-2xl border border-slate-200 bg-white p-8 transition-all hover:shadow-lg hover:shadow-blue-500/5 hover:border-blue-200">
+            <div className="mb-5 flex items-center gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25">
+                <BarChart3 className="h-6 w-6" />
+              </div>
+              <span className="text-sm font-bold text-blue-600/40 uppercase tracking-wider">Step 1</span>
             </div>
-            <h3 className="text-lg font-semibold text-slate-900">We Track the Data</h3>
+            <h3 className="text-lg font-semibold text-slate-900">We Scrape the Data</h3>
             <p className="mt-2 text-sm text-slate-500 leading-relaxed">
-              Our scrapers monitor {totalSites} UK raffle sites every few hours, tracking ticket
-              prices, odds, and availability in real time.
+              Automated scrapers monitor {totalSites} UK raffle sites every few hours — pulling live ticket
+              counts, prices, odds, and draw dates directly from source.
             </p>
           </div>
 
-          <div className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-              <TrendingUp className="h-6 w-6" />
+          {/* Step 2 */}
+          <div className="group relative rounded-2xl border border-slate-200 bg-white p-8 transition-all hover:shadow-lg hover:shadow-emerald-500/5 hover:border-emerald-200">
+            <div className="mb-5 flex items-center gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/25">
+                <TrendingUp className="h-6 w-6" />
+              </div>
+              <span className="text-sm font-bold text-emerald-600/40 uppercase tracking-wider">Step 2</span>
             </div>
-            <h3 className="text-lg font-semibold text-slate-900">You Compare the Odds</h3>
+            <h3 className="text-lg font-semibold text-slate-900">We Calculate the Odds</h3>
             <p className="mt-2 text-sm text-slate-500 leading-relaxed">
-              Filter by category, sort by best odds or lowest price, and find competitions that
-              offer genuine value for money.
+              Ticket price, total tickets, and percentage sold are crunched into comparable odds ratios and
+              value-per-pound metrics across every site.
             </p>
           </div>
 
-          <div className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
-              <Shield className="h-6 w-6" />
+          {/* Step 3 */}
+          <div className="group relative rounded-2xl border border-slate-200 bg-white p-8 transition-all hover:shadow-lg hover:shadow-amber-500/5 hover:border-amber-200">
+            <div className="mb-5 flex items-center gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25">
+                <Shield className="h-6 w-6" />
+              </div>
+              <span className="text-sm font-bold text-amber-600/40 uppercase tracking-wider">Step 3</span>
             </div>
-            <h3 className="text-lg font-semibold text-slate-900">Make Informed Decisions</h3>
+            <h3 className="text-lg font-semibold text-slate-900">You Make Smarter Picks</h3>
             <p className="mt-2 text-sm text-slate-500 leading-relaxed">
-              See exactly how many tickets are sold, when draws happen, and what the cash
-              alternatives are — before you spend a penny.
+              Filter by car type, sort by best odds or price, and see exactly what you&apos;re getting into —
+              cash alternatives, draw dates, and all.
             </p>
           </div>
         </div>
@@ -350,7 +384,7 @@ export default async function HomePage() {
         <div className="mt-10 text-center">
           <Link
             href="/how-it-works"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-all hover:bg-slate-50 hover:shadow hover:-translate-y-0.5"
           >
             Learn more about how odds work
             <ArrowRight className="h-4 w-4" />
