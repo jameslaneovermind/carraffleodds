@@ -54,7 +54,7 @@ async function createBrowser(): Promise<Browser> {
       '--disable-gpu',
       '--disable-extensions',
       '--disable-background-networking',
-      '--single-process',              // Reduce memory usage
+      '--disable-features=site-per-process',
     ],
   });
 }

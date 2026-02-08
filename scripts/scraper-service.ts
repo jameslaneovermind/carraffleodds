@@ -41,7 +41,7 @@ async function ensureBrowser(): Promise<Browser> {
       '--disable-gpu',
       '--disable-extensions',
       '--disable-background-networking',
-      '--single-process',
+      '--disable-features=site-per-process',
     ],
   });
 
@@ -81,7 +81,7 @@ async function runWithLock(jobName: string, fn: () => Promise<void>): Promise<vo
 async function fullScrape(): Promise<void> {
   await runWithLock('Full Scrape', async () => {
     const b = await ensureBrowser();
-    await runAllScrapers({ browser: b, concurrency: 3 });
+    await runAllScrapers({ browser: b, concurrency: 1 });
   });
 }
 
