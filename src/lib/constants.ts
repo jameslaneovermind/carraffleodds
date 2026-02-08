@@ -56,6 +56,14 @@ export const CATEGORIES: CategoryDefinition[] = [
     seoTitle: 'Best Watch Raffle Odds UK — Win Rolex, TAG Heuer',
     seoDescription: 'Compare watch raffle odds across UK competition sites. Win Rolex, TAG Heuer, Omega and more.',
   },
+  {
+    slug: 'other',
+    label: 'Other',
+    pageTitle: 'Other Raffles',
+    prizeTypes: ['other'],
+    seoTitle: 'All Other Raffles UK — Compare Live Competitions',
+    seoDescription: 'Compare raffle odds across UK competition sites for all other prize types.',
+  },
 ];
 
 /** Categories shown behind a "More" toggle */
@@ -75,14 +83,6 @@ export const MORE_CATEGORIES: CategoryDefinition[] = [
     prizeTypes: ['house'],
     seoTitle: 'Best House Raffle Odds UK — Win Your Dream Home',
     seoDescription: 'Compare house raffle odds across UK competition sites.',
-  },
-  {
-    slug: 'other',
-    label: 'Other',
-    pageTitle: 'Other Raffles',
-    prizeTypes: ['other'],
-    seoTitle: 'All Other Raffles UK — Compare Live Competitions',
-    seoDescription: 'Compare raffle odds across UK competition sites for all other prize types.',
   },
 ];
 
