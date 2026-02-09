@@ -329,7 +329,7 @@ export class TemplateScraper extends BaseScraper {
    *   "15/02/2025"         → new Date(2025, 1, 15)
    *   "Competition closes in X Days Y Hours" → relative from now
    */
-  private parseDate(text: string): Date | undefined {
+  private parseDate(_text: string): Date | undefined {
     // TODO: Implement
     return undefined;
   }

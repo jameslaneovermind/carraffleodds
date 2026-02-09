@@ -716,7 +716,7 @@ export class RevCompsScraper extends BaseScraper {
       if (month == null) return null;
 
       const now = new Date();
-      let year = now.getFullYear();
+      const year = now.getFullYear();
       const target = new Date(year, month, day, 23, 0, 0);
 
       // If the date has passed, assume next year
