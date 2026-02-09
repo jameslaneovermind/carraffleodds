@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 import { ExternalLink, Clock, Ticket } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -35,18 +36,25 @@ export function RaffleCard({ raffle }: RaffleCardProps) {
   const categoryLabel = getCategoryLabel(raffle.car_category ?? raffle.prize_type);
   const endingSoon = isEndingSoon(raffle.end_date);
   const isNewRaffle = isNew(raffle.created_at);
+  const [imgState, setImgState] = useState<'optimized' | 'unoptimized' | 'failed'>('optimized');
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden flex flex-col">
       {/* Image */}
       <div className="relative aspect-[16/9] bg-slate-200 overflow-hidden">
-        {raffle.image_url ? (
+        {raffle.image_url && imgState !== 'failed' ? (
           <Image
             src={raffle.image_url}
             alt={raffle.title}
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            unoptimized={imgState === 'unoptimized'}
+            onError={() => {
+              // First try failed (optimized) → retry unoptimized (direct load)
+              // Second try failed (unoptimized) → show placeholder
+              setImgState((prev) => (prev === 'optimized' ? 'unoptimized' : 'failed'));
+            }}
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
