@@ -37,8 +37,34 @@ export class RevCompsScraper extends BaseScraper {
   baseUrl = 'https://www.revcomps.com';
 
   // ==========================================
-  // Full Scrape — listing + detail pages
+  // Full Scrape — listing + detail pages (vehicles only)
   // ==========================================
+
+  /** Keywords that indicate a vehicle prize worth visiting the detail page for */
+  private static readonly VEHICLE_KEYWORDS = [
+    'bmw', 'audi', 'mercedes', 'ferrari', 'lamborghini', 'porsche', 'mclaren',
+    'volkswagen', 'ford focus', 'ford fiesta', 'ford mustang', 'ford escort',
+    'ford transit', 'ford ranger',
+    'honda civic', 'honda type', 'honda cb', 'toyota supra', 'toyota gr',
+    'nissan gtr', 'nissan gt-r', 'nissan skyline',
+    'range rover', 'land rover', 'bentley', 'rolls royce', 'tesla',
+    'volvo xc', 'volvo v', 'volvo s', 'vauxhall', 'mini cooper',
+    'jaguar', 'aston martin', 'defender', 'motorhome', 'campervan',
+    'peugeot', 'seat ', 'skoda', 'fiat ', 'alfa romeo', 'maserati',
+    'suzuki jimny', 'suzuki swift', 'transit connect', 'transporter', 'camper',
+    'ducati', 'kawasaki', 'yamaha', 'motorcycle', 'motorbike', 'panigale',
+    'triumph', 'fireblade', 'hayabusa', 'sur ron', 'surron',
+    // Generic vehicle hints
+    'car', 'van', 'bike', 'quad',
+  ];
+
+  /** Per-detail-page timeout to prevent a single hung page from stalling everything */
+  private static readonly DETAIL_PAGE_TIMEOUT_MS = 45_000; // 45 seconds
+
+  private looksLikeVehicle(title: string): boolean {
+    const lower = title.toLowerCase();
+    return RevCompsScraper.VEHICLE_KEYWORDS.some((kw) => lower.includes(kw));
+  }
 
   async scrape(context: BrowserContext): Promise<ScraperResult> {
     const start = Date.now();
@@ -49,15 +75,39 @@ export class RevCompsScraper extends BaseScraper {
       const cards = await this.scrapeListingPage(context);
       console.log(`[${this.name}] Found ${cards.length} competition cards`);
 
-      for (let i = 0; i < cards.length; i++) {
-        const card = cards[i];
+      // Split into vehicles (need detail page) and non-vehicles (listing data only)
+      const vehicleCards = cards.filter((c) => this.looksLikeVehicle(c.title));
+      const otherCards = cards.filter((c) => !this.looksLikeVehicle(c.title));
+
+      console.log(
+        `[${this.name}] ${vehicleCards.length} vehicles (detail page), ${otherCards.length} others (listing only)`
+      );
+
+      // Non-vehicle competitions: use listing data directly (fast)
+      for (const card of otherCards) {
+        const fallback = this.buildRaffleFromCard(card);
+        if (fallback) raffles.push(fallback);
+      }
+
+      // Vehicle competitions: visit detail pages for cash alt, precise end date
+      for (let i = 0; i < vehicleCards.length; i++) {
+        const card = vehicleCards[i];
         const slug = extractSlugFromUrl(card.url);
         console.log(
-          `[${this.name}] [${i + 1}/${cards.length}] Scraping: ${slug}`
+          `[${this.name}] [${i + 1}/${vehicleCards.length}] Detail: ${slug}`
         );
 
         try {
-          const raffle = await this.scrapeDetailPage(context, card);
+          // Wrap detail page in a timeout so one hung page can't block everything
+          const raffle = await Promise.race([
+            this.scrapeDetailPage(context, card),
+            new Promise<null>((_, reject) =>
+              setTimeout(
+                () => reject(new Error('Detail page timed out')),
+                RevCompsScraper.DETAIL_PAGE_TIMEOUT_MS
+              )
+            ),
+          ]);
           if (raffle) raffles.push(raffle);
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
@@ -69,7 +119,7 @@ export class RevCompsScraper extends BaseScraper {
           if (fallback) raffles.push(fallback);
         }
 
-        await this.delay(1500);
+        await this.delay(1000);
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);

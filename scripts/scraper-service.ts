@@ -59,6 +59,12 @@ async function ensureBrowser(): Promise<Browser> {
 // Job runners with lock to prevent overlap
 // ============================================
 
+const JOB_TIMEOUT_MS: Record<string, number> = {
+  'Full Scrape': 25 * 60 * 1000,   // 25 minutes max
+  'Quick Update': 10 * 60 * 1000,  // 10 minutes max
+  'Daily Cleanup': 5 * 60 * 1000,  // 5 minutes max
+};
+
 async function runWithLock(jobName: string, fn: () => Promise<void>): Promise<void> {
   if (isRunning) {
     console.log(`[Service] Skipping ${jobName} — another job is still running`);
@@ -68,11 +74,28 @@ async function runWithLock(jobName: string, fn: () => Promise<void>): Promise<vo
   isRunning = true;
   console.log(`[Service] Starting ${jobName}...`);
 
+  const timeoutMs = JOB_TIMEOUT_MS[jobName] ?? 20 * 60 * 1000;
+
   try {
-    await fn();
+    await Promise.race([
+      fn(),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`${jobName} timed out after ${Math.round(timeoutMs / 60000)}m`)), timeoutMs)
+      ),
+    ]);
     console.log(`[Service] ${jobName} complete`);
   } catch (error) {
-    console.error(`[Service] ${jobName} failed:`, error instanceof Error ? error.message : error);
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error(`[Service] ${jobName} failed: ${msg}`);
+
+    // If timed out, kill the browser to clean up hung pages
+    if (msg.includes('timed out')) {
+      console.warn('[Service] Killing browser to recover from timeout...');
+      if (browser) {
+        await browser.close().catch(() => {});
+        browser = null;
+      }
+    }
   } finally {
     isRunning = false;
   }
@@ -81,7 +104,7 @@ async function runWithLock(jobName: string, fn: () => Promise<void>): Promise<vo
 async function fullScrape(): Promise<void> {
   await runWithLock('Full Scrape', async () => {
     const b = await ensureBrowser();
-    await runAllScrapers({ browser: b, concurrency: 1 });
+    await runAllScrapers({ browser: b, concurrency: 2 });
   });
 }
 

@@ -86,6 +86,12 @@ export interface OrchestratorOptions {
   browser?: Browser;
 }
 
+/** Max time per individual scraper before it's forcefully timed out */
+const PER_SCRAPER_TIMEOUT_MS = {
+  full: 10 * 60 * 1000,  // 10 minutes per scraper for full scrape
+  quick: 3 * 60 * 1000,  // 3 minutes per scraper for quick update
+};
+
 export async function runAllScrapers(options: OrchestratorOptions = {}): Promise<void> {
   const { quick = false, siteSlug, concurrency = 1 } = options;
   const mode = quick ? 'QUICK UPDATE' : 'FULL SCRAPE';
@@ -131,69 +137,84 @@ export async function runAllScrapers(options: OrchestratorOptions = {}): Promise
         batch.map(async (scraper) => {
           const context = await createContext(browser);
 
+          const timeoutMs = quick ? PER_SCRAPER_TIMEOUT_MS.quick : PER_SCRAPER_TIMEOUT_MS.full;
+          const scraperStart = Date.now();
+
           try {
-            if (quick) {
-              // Quick update — listing pages only
-              console.log(`[${scraper.name}] Starting quick update...`);
-              const result = await scraper.quickUpdate(context);
+            // Wrap scraper execution in a timeout to prevent hangs
+            await Promise.race([
+              (async () => {
+                if (quick) {
+                  // Quick update — listing pages only
+                  console.log(`[${scraper.name}] Starting quick update...`);
+                  const result = await scraper.quickUpdate(context);
 
-              console.log(`[${scraper.name}] Quick update found ${result.updates.length} updates in ${result.duration}ms`);
+                  console.log(`[${scraper.name}] Quick update found ${result.updates.length} updates in ${result.duration}ms`);
 
-              if (result.updates.length > 0) {
-                const updated = await persistQuickUpdate(result, supabase);
-                console.log(`[${scraper.name}] Persisted ${updated} quick updates`);
-              }
+                  if (result.updates.length > 0) {
+                    const updated = await persistQuickUpdate(result, supabase);
+                    console.log(`[${scraper.name}] Persisted ${updated} quick updates`);
+                  }
 
-              if (result.errors.length > 0) {
-                console.warn(`[${scraper.name}] Errors:`, result.errors);
-              }
+                  if (result.errors.length > 0) {
+                    console.warn(`[${scraper.name}] Errors:`, result.errors);
+                  }
 
-              await logScrapeRun(scraper.siteSlug, {
-                status: result.errors.length > 0 ? 'partial' : 'success',
-                itemsFound: result.updates.length,
-                itemsNew: 0,
-                itemsUpdated: result.updates.length,
-                errorMessage: result.errors.join('; ') || undefined,
-                durationMs: result.duration,
-              }, supabase);
+                  await logScrapeRun(scraper.siteSlug, {
+                    status: result.errors.length > 0 ? 'partial' : 'success',
+                    itemsFound: result.updates.length,
+                    itemsNew: 0,
+                    itemsUpdated: result.updates.length,
+                    errorMessage: result.errors.join('; ') || undefined,
+                    durationMs: result.duration,
+                  }, supabase);
 
-            } else {
-              // Full deep scrape
-              console.log(`[${scraper.name}] Starting full scrape...`);
-              const result = await scraper.scrape(context);
+                } else {
+                  // Full deep scrape
+                  console.log(`[${scraper.name}] Starting full scrape...`);
+                  const result = await scraper.scrape(context);
 
-              console.log(`[${scraper.name}] Found ${result.raffles.length} raffles in ${result.duration}ms`);
+                  console.log(`[${scraper.name}] Found ${result.raffles.length} raffles in ${result.duration}ms`);
 
-              if (result.raffles.length > 0) {
-                const { itemsNew, itemsUpdated } = await persistScrapeResult(result, supabase);
-                console.log(`[${scraper.name}] Persisted: ${itemsNew} new, ${itemsUpdated} updated`);
+                  if (result.raffles.length > 0) {
+                    const { itemsNew, itemsUpdated } = await persistScrapeResult(result, supabase);
+                    console.log(`[${scraper.name}] Persisted: ${itemsNew} new, ${itemsUpdated} updated`);
 
-                await logScrapeRun(scraper.siteSlug, {
-                  status: result.errors.length > 0 ? 'partial' : 'success',
-                  itemsFound: result.raffles.length,
-                  itemsNew,
-                  itemsUpdated,
-                  errorMessage: result.errors.join('; ') || undefined,
-                  durationMs: result.duration,
-                }, supabase);
-              } else {
-                await logScrapeRun(scraper.siteSlug, {
-                  status: 'failed',
-                  itemsFound: 0,
-                  itemsNew: 0,
-                  itemsUpdated: 0,
-                  errorMessage: result.errors.join('; ') || 'No raffles found',
-                  durationMs: result.duration,
-                }, supabase);
-              }
+                    await logScrapeRun(scraper.siteSlug, {
+                      status: result.errors.length > 0 ? 'partial' : 'success',
+                      itemsFound: result.raffles.length,
+                      itemsNew,
+                      itemsUpdated,
+                      errorMessage: result.errors.join('; ') || undefined,
+                      durationMs: result.duration,
+                    }, supabase);
+                  } else {
+                    await logScrapeRun(scraper.siteSlug, {
+                      status: 'failed',
+                      itemsFound: 0,
+                      itemsNew: 0,
+                      itemsUpdated: 0,
+                      errorMessage: result.errors.join('; ') || 'No raffles found',
+                      durationMs: result.duration,
+                    }, supabase);
+                  }
 
-              if (result.errors.length > 0) {
-                console.warn(`[${scraper.name}] Errors:`, result.errors);
-              }
-            }
+                  if (result.errors.length > 0) {
+                    console.warn(`[${scraper.name}] Errors:`, result.errors);
+                  }
+                }
+              })(),
+              new Promise<never>((_, reject) =>
+                setTimeout(
+                  () => reject(new Error(`Scraper timed out after ${Math.round(timeoutMs / 60000)}m`)),
+                  timeoutMs
+                )
+              ),
+            ]);
           } catch (error) {
             const msg = error instanceof Error ? error.message : String(error);
-            console.error(`[${scraper.name}] Fatal error: ${msg}`);
+            const elapsed = Math.round((Date.now() - scraperStart) / 1000);
+            console.error(`[${scraper.name}] Fatal error after ${elapsed}s: ${msg}`);
 
             await logScrapeRun(scraper.siteSlug, {
               status: 'failed',
@@ -201,7 +222,7 @@ export async function runAllScrapers(options: OrchestratorOptions = {}): Promise
               itemsNew: 0,
               itemsUpdated: 0,
               errorMessage: msg,
-              durationMs: 0,
+              durationMs: Date.now() - scraperStart,
             }, supabase);
           } finally {
             await context.close();
