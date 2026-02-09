@@ -60,8 +60,8 @@ async function ensureBrowser(): Promise<Browser> {
 // ============================================
 
 const JOB_TIMEOUT_MS: Record<string, number> = {
-  'Full Scrape': 25 * 60 * 1000,   // 25 minutes max
-  'Quick Update': 10 * 60 * 1000,  // 10 minutes max
+  'Full Scrape': 45 * 60 * 1000,   // 45 minutes max (supports 9 scrapers at concurrency 3)
+  'Quick Update': 20 * 60 * 1000,  // 20 minutes max (supports 9 scrapers at concurrency 2)
   'Daily Cleanup': 5 * 60 * 1000,  // 5 minutes max
 };
 
@@ -104,14 +104,14 @@ async function runWithLock(jobName: string, fn: () => Promise<void>): Promise<vo
 async function fullScrape(): Promise<void> {
   await runWithLock('Full Scrape', async () => {
     const b = await ensureBrowser();
-    await runAllScrapers({ browser: b, concurrency: 2 });
+    await runAllScrapers({ browser: b, concurrency: 3 });
   });
 }
 
 async function quickUpdate(): Promise<void> {
   await runWithLock('Quick Update', async () => {
     const b = await ensureBrowser();
-    await runAllScrapers({ quick: true, browser: b });
+    await runAllScrapers({ quick: true, browser: b, concurrency: 2 });
   });
 }
 
@@ -133,8 +133,8 @@ function startSchedule(): void {
     fullScrape();
   }, { timezone: 'Europe/London' });
 
-  // Quick update every 10 minutes: */10 * * * *
-  cron.schedule('*/10 * * * *', () => {
+  // Quick update every 20 minutes: */20 * * * *
+  cron.schedule('*/20 * * * *', () => {
     quickUpdate();
   }, { timezone: 'Europe/London' });
 
@@ -144,8 +144,8 @@ function startSchedule(): void {
   }, { timezone: 'Europe/London' });
 
   console.log('[Service] Schedules active:');
-  console.log('  - Full scrape:   every 3 hours');
-  console.log('  - Quick update:  every 10 minutes');
+  console.log('  - Full scrape:   every 3 hours (concurrency 3, timeout 45m)');
+  console.log('  - Quick update:  every 20 minutes (concurrency 2, timeout 20m)');
   console.log('  - Daily cleanup: 3:00 AM London time');
 }
 

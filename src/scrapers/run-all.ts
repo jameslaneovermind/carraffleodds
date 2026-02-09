@@ -31,7 +31,7 @@ import { RevCompsScraper } from './rev-comps';
 // Registry of all scrapers
 // ============================================
 
-function getAllScrapers(): BaseScraper[] {
+export function getAllScrapers(): BaseScraper[] {
   return [
     new DreamCarGiveawaysScraper(),
     new SevenDaysPerformanceScraper(),

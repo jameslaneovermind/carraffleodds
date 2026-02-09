@@ -13,6 +13,7 @@
     "scrape:cleanup": "tsx src/scrapers/run-all.ts --cleanup",
     "scraper-service": "tsx scripts/scraper-service.ts",
     "investigate": "tsx scripts/investigate-dcg.ts",
+    "test:scraper": "tsx scripts/validate-scraper.ts",
     "test:7days": "tsx scripts/test-7days.ts",
     "test:dcg": "tsx scripts/test-scraper.ts"
   },
