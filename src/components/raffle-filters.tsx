@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { CategoryPills } from './category-pills';
+import { getValueScore } from '@/lib/utils';
 import { RaffleGrid } from './raffle-grid';
 import { RaffleEmptyState } from './raffle-empty-state';
 import { cn, formatPence } from '@/lib/utils';
@@ -148,6 +149,15 @@ export function RaffleFilters({ raffles, initialCategory, sites }: RaffleFilters
     // ========== Sorting ==========
     result.sort((a, b) => {
       switch (sortParam) {
+        case 'best-value': {
+          // Highest value score first, nulls last
+          const scoreA = getValueScore(a);
+          const scoreB = getValueScore(b);
+          if (scoreA == null && scoreB == null) return 0;
+          if (scoreA == null) return 1;
+          if (scoreB == null) return -1;
+          return scoreB - scoreA;
+        }
         case 'best-odds': {
           // Lowest odds first, nulls last
           if (a.total_tickets == null && b.total_tickets == null) return 0;
@@ -159,13 +169,6 @@ export function RaffleFilters({ raffles, initialCategory, sites }: RaffleFilters
           const priceA = a.ticket_price ?? Infinity;
           const priceB = b.ticket_price ?? Infinity;
           return priceA - priceB;
-        }
-        case 'highest-value': {
-          // Highest first, nulls last
-          if (a.prize_value == null && b.prize_value == null) return 0;
-          if (a.prize_value == null) return 1;
-          if (b.prize_value == null) return -1;
-          return b.prize_value - a.prize_value;
         }
         case 'newest': {
           return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();

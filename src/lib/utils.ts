@@ -24,28 +24,82 @@ export function calculateOddsRatio(totalTickets: number | null): number | null {
 
 /**
  * Value per pound — how much prize value per £1 spent.
+ * Uses cashAlternative as fallback when prizeValue isn't available.
  */
 export function calculateValuePerPound(
   prizeValue: number | null,
+  cashAlternative: number | null,
   ticketPrice: number | null
 ): number | null {
-  if (!prizeValue || !ticketPrice || ticketPrice <= 0) return null;
-  return prizeValue / ticketPrice;
+  const value = prizeValue || cashAlternative;
+  if (!value || !ticketPrice || ticketPrice <= 0) return null;
+  return value / ticketPrice;
 }
 
 /**
- * Expected value — statistical value of each ticket.
- * EV > 1 means ticket is "worth more" than its price on average.
+ * Expected value (Value Score) — return per £1 spent.
+ *
+ *   Value Score = Prize Value / (Ticket Price × Total Tickets)
+ *
+ * A score of 0.75 means for every £1 you spend, you're "buying"
+ * 75p of prize value on average. Higher is better.
+ *
+ * Uses cashAlternative as fallback when prizeValue isn't available.
  */
 export function calculateExpectedValue(
   prizeValue: number | null,
+  cashAlternative: number | null,
   totalTickets: number | null,
   ticketPrice: number | null
 ): number | null {
-  if (!prizeValue || !totalTickets || !ticketPrice || totalTickets <= 0 || ticketPrice <= 0) {
+  const value = prizeValue || cashAlternative;
+  if (!value || !totalTickets || !ticketPrice || totalTickets <= 0 || ticketPrice <= 0) {
     return null;
   }
-  return (prizeValue / totalTickets) / ticketPrice;
+  return (value / totalTickets) / ticketPrice;
+}
+
+/**
+ * Compute value score from a Raffle object (client-side).
+ * Returns the expected return per £1 spent, or null.
+ */
+export function getValueScore(raffle: {
+  prize_value: number | null;
+  cash_alternative: number | null;
+  total_tickets: number | null;
+  ticket_price: number | null;
+}): number | null {
+  // Prefer DB-computed value if available
+  const value = raffle.prize_value || raffle.cash_alternative;
+  if (!value || !raffle.total_tickets || !raffle.ticket_price) return null;
+  if (raffle.total_tickets <= 0 || raffle.ticket_price <= 0) return null;
+  return value / (raffle.total_tickets * raffle.ticket_price);
+}
+
+/**
+ * Format value score for display.
+ * 0.75 → "75p", 1.2 → "£1.20", 0.04 → "4p"
+ */
+export function formatValueScore(score: number | null): string {
+  if (score == null) return 'N/A';
+  const pence = Math.round(score * 100);
+  if (pence >= 100) {
+    const pounds = (pence / 100).toFixed(2);
+    return `£${pounds}`;
+  }
+  return `${pence}p`;
+}
+
+/**
+ * Get a qualitative label for a value score.
+ */
+export function getValueScoreLabel(score: number | null): { label: string; color: string } {
+  if (score == null) return { label: '', color: 'text-slate-400' };
+  if (score >= 0.70) return { label: 'Excellent', color: 'text-emerald-600' };
+  if (score >= 0.45) return { label: 'Great', color: 'text-green-600' };
+  if (score >= 0.25) return { label: 'Good', color: 'text-blue-600' };
+  if (score >= 0.10) return { label: 'Fair', color: 'text-amber-600' };
+  return { label: 'Low', color: 'text-slate-400' };
 }
 
 /**
@@ -53,12 +107,13 @@ export function calculateExpectedValue(
  */
 export function calculateRaffleMetrics(data: {
   prizeValue: number | null;
+  cashAlternative: number | null;
   totalTickets: number | null;
   ticketPrice: number | null;
   ticketsSold: number | null;
   endDate: Date | null;
 }) {
-  const { prizeValue, totalTickets, ticketPrice, ticketsSold, endDate } = data;
+  const { prizeValue, cashAlternative, totalTickets, ticketPrice, ticketsSold, endDate } = data;
 
   const ticketsRemaining =
     totalTickets != null && ticketsSold != null
@@ -71,8 +126,8 @@ export function calculateRaffleMetrics(data: {
       : null;
 
   const oddsRatio = calculateOddsRatio(totalTickets);
-  const valuePerPound = calculateValuePerPound(prizeValue, ticketPrice);
-  const expectedValue = calculateExpectedValue(prizeValue, totalTickets, ticketPrice);
+  const valuePerPound = calculateValuePerPound(prizeValue, cashAlternative, ticketPrice);
+  const expectedValue = calculateExpectedValue(prizeValue, cashAlternative, totalTickets, ticketPrice);
 
   // Determine status
   let status: 'active' | 'ending_soon' | 'sold_out' = 'active';

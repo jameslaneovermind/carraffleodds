@@ -170,7 +170,8 @@ export async function persistScrapeResult(
 
     // Calculate metrics
     const metrics = calculateRaffleMetrics({
-      prizeValue: raffle.prizeValue ?? cashAlternative,
+      prizeValue: raffle.prizeValue ?? null,
+      cashAlternative: cashAlternative ?? null,
       totalTickets: raffle.totalTickets ?? null,
       ticketPrice: raffle.ticketPrice ?? null,
       ticketsSold: raffle.ticketsSold ?? null,

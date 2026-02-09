@@ -2,13 +2,13 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { ExternalLink, Clock, Ticket } from 'lucide-react';
+import { ExternalLink, Clock, Ticket, Zap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { SiteBadge } from './site-badge';
 import { ProgressBar } from './progress-bar';
 import { CountdownTimer } from './countdown-timer';
-import { formatPence, formatOdds } from '@/lib/utils';
+import { formatPence, formatOdds, getValueScore, formatValueScore, getValueScoreLabel } from '@/lib/utils';
 import type { Raffle } from '@/lib/types';
 
 interface RaffleCardProps {
@@ -37,6 +37,8 @@ export function RaffleCard({ raffle }: RaffleCardProps) {
   const endingSoon = isEndingSoon(raffle.end_date);
   const isNewRaffle = isNew(raffle.created_at);
   const [imgState, setImgState] = useState<'optimized' | 'unoptimized' | 'failed'>('optimized');
+  const valueScore = getValueScore(raffle);
+  const vsLabel = getValueScoreLabel(valueScore);
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden flex flex-col">
@@ -59,6 +61,19 @@ export function RaffleCard({ raffle }: RaffleCardProps) {
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
             <Ticket className="h-12 w-12 text-slate-300" />
+          </div>
+        )}
+
+        {/* Value Score badge — top right of image */}
+        {valueScore != null && (
+          <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm rounded-lg px-2 py-1 shadow-sm border border-slate-200/50">
+            <div className="flex items-center gap-1">
+              <Zap className={`h-3 w-3 ${vsLabel.color}`} />
+              <span className={`text-xs font-bold ${vsLabel.color}`}>
+                {formatValueScore(valueScore)}
+              </span>
+            </div>
+            <p className="text-[9px] text-slate-500 leading-tight">per £1</p>
           </div>
         )}
       </div>
@@ -120,15 +135,20 @@ export function RaffleCard({ raffle }: RaffleCardProps) {
             <CountdownTimer endDate={raffle.end_date} />
           </div>
 
-          {/* Prize value (if available) */}
-          {raffle.prize_value && (
-            <div>
-              <p className="text-xs text-slate-400 mb-0.5">Prize Value</p>
-              <p className="text-sm font-medium text-slate-700 tabular-nums">
-                {formatPence(raffle.prize_value)}
+          {/* Value Score */}
+          <div>
+            <p className="text-xs text-slate-400 mb-0.5 flex items-center gap-1">
+              <Zap className="h-3 w-3" />
+              Value
+            </p>
+            {valueScore != null ? (
+              <p className={`text-sm font-bold tabular-nums ${vsLabel.color}`}>
+                {formatValueScore(valueScore)}<span className="text-xs font-normal text-slate-400">/£1</span>
               </p>
-            </div>
-          )}
+            ) : (
+              <p className="text-sm text-slate-400">N/A</p>
+            )}
+          </div>
         </div>
 
         {/* Progress bar */}

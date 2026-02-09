@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRight, TrendingUp, Clock, Shield, BarChart3, Eye, RefreshCw, Scale, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, TrendingUp, Clock, Shield, BarChart3, Eye, RefreshCw, Scale, CheckCircle2, Zap } from 'lucide-react';
 import { createBrowserClient } from '@/lib/supabase';
 import { RaffleGrid } from '@/components/raffle-grid';
 import { WebSiteJsonLd } from '@/components/json-ld';
+import { getValueScore } from '@/lib/utils';
 import type { Raffle } from '@/lib/types';
 
 export const metadata: Metadata = {
@@ -35,13 +36,13 @@ async function getHomeData() {
     .filter((r) => r.odds_ratio != null && r.odds_ratio > 0)
     .sort((a, b) => (a.odds_ratio ?? Infinity) - (b.odds_ratio ?? Infinity))[0];
 
-  // Featured: lead with best-odds car raffles, then fill with best overall
-  const withOdds = allRaffles
-    .filter((r) => r.odds_ratio != null && r.image_url)
-    .sort((a, b) => (a.odds_ratio ?? Infinity) - (b.odds_ratio ?? Infinity));
-  const bestCars = withOdds.filter((r) => r.prize_type === 'car').slice(0, 3);
+  // Featured: lead with best-value car raffles, then fill with best overall
+  const withValue = allRaffles
+    .filter((r) => r.image_url && getValueScore(r) != null)
+    .sort((a, b) => (getValueScore(b) ?? 0) - (getValueScore(a) ?? 0));
+  const bestCars = withValue.filter((r) => r.prize_type === 'car').slice(0, 3);
   const bestCarIds = new Set(bestCars.map((r) => r.id));
-  const bestOther = withOdds.filter((r) => !bestCarIds.has(r.id)).slice(0, 6 - bestCars.length);
+  const bestOther = withValue.filter((r) => !bestCarIds.has(r.id)).slice(0, 6 - bestCars.length);
   const featured = [...bestCars, ...bestOther].slice(0, 6);
 
   // Ending soon: next 6 with end dates
@@ -181,18 +182,18 @@ export default async function HomePage() {
           <div className="flex items-end justify-between mb-8">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="h-5 w-5 text-emerald-500" />
-                <span className="text-sm font-semibold text-emerald-600 uppercase tracking-wide">Best Value</span>
+                <Zap className="h-5 w-5 text-emerald-500" />
+                <span className="text-sm font-semibold text-emerald-600 uppercase tracking-wide">Exclusive Metric</span>
               </div>
               <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
-                Top Odds Right Now
+                Best Value Right Now
               </h2>
               <p className="mt-1 text-slate-500">
-                Raffles with the best chances of winning
+                Highest expected return per £1 spent
               </p>
             </div>
             <Link
-              href="/raffles?sort=best-odds"
+              href="/raffles?sort=best-value"
               className="hidden sm:inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
             >
               View all
@@ -204,10 +205,10 @@ export default async function HomePage() {
 
           <div className="mt-6 text-center sm:hidden">
             <Link
-              href="/raffles?sort=best-odds"
+              href="/raffles?sort=best-value"
               className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700"
             >
-              View all best odds
+              View all best value
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
