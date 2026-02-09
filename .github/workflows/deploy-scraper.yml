@@ -1,0 +1,34 @@
+name: Deploy Scraper to Droplet
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/scrapers/**'
+      - 'src/lib/utils.ts'
+      - 'scripts/**'
+      - 'ecosystem.config.js'
+      - 'package.json'
+      - 'package-lock.json'
+
+jobs:
+  deploy:
+    name: Deploy to DigitalOcean
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DROPLET_HOST }}
+          username: root
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          script: |
+            cd /opt/carraffleodds
+            echo "=== Pulling latest code ==="
+            git pull origin main
+            echo "=== Installing dependencies ==="
+            npm install --production=false
+            echo "=== Restarting scraper ==="
+            pm2 restart scraper
+            echo "=== Deploy complete ==="
+            pm2 status
