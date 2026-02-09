@@ -182,11 +182,11 @@ export class TemplateScraper extends BaseScraper {
           title: c.title,
           url: c.url,
           imageUrl: c.imageUrl,
-          ticketPrice: c.priceText ? parsePriceToPence(c.priceText) : undefined,
+          ticketPrice: c.priceText ? parsePriceToPence(c.priceText) ?? undefined : undefined,
           percentSold: c.percentText
             ? parseFloat(c.percentText.replace(/[^0-9.]/g, ''))
             : undefined,
-          cashAlternative: c.cashText ? parsePriceToPence(c.cashText) : undefined,
+          cashAlternative: c.cashText ? parsePriceToPence(c.cashText) ?? undefined : undefined,
         }));
     } finally {
       await page.close();
@@ -329,7 +329,8 @@ export class TemplateScraper extends BaseScraper {
    *   "15/02/2025"         → new Date(2025, 1, 15)
    *   "Competition closes in X Days Y Hours" → relative from now
    */
-  private parseDate(_text: string): Date | undefined {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private parseDate(text: string): Date | undefined {
     // TODO: Implement
     return undefined;
   }

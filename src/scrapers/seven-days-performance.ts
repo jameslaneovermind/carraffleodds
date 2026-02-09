@@ -161,7 +161,9 @@ export class SevenDaysPerformanceScraper extends BaseScraper {
 
       return unique.map(a => {
         const href = a.getAttribute('href') || '';
-        const text = (a as HTMLElement).innerText.trim();
+        // Normalize newlines to spaces — 7DP card text uses block elements
+        // which produce \n in innerText, breaking regex patterns
+        const text = (a as HTMLElement).innerText.trim().replace(/\n+/g, ' ');
         const img = a.querySelector('img');
         const imgSrc = img?.getAttribute('src') || null;
 

@@ -390,7 +390,16 @@ export class RevCompsScraper extends BaseScraper {
 
       await page.waitForTimeout(3000);
 
-      const data = await page.evaluate(() => {
+      const data: {
+        pageTitle: string;
+        endDateStr: string | null;
+        totalTicketsStr: string | null;
+        cashAlternative: number | null;
+        additionalCash: number | null;
+        price: string | null;
+        mainImage: string | null;
+        drawType: string | null;
+      } = await page.evaluate(() => {
         const body = document.body.innerText;
 
         // --- Title from page ---
