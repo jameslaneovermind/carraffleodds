@@ -25,6 +25,7 @@ import {
 } from './base';
 import { DreamCarGiveawaysScraper } from './dream-car-giveaways';
 import { SevenDaysPerformanceScraper } from './seven-days-performance';
+import { RevCompsScraper } from './rev-comps';
 
 // ============================================
 // Registry of all scrapers
@@ -34,6 +35,7 @@ function getAllScrapers(): BaseScraper[] {
   return [
     new DreamCarGiveawaysScraper(),
     new SevenDaysPerformanceScraper(),
+    new RevCompsScraper(),
     // Add more scrapers here as they're built:
     // new EliteCompetitionsScraper(),
     // new BotbScraper(),

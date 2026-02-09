@@ -30,6 +30,14 @@ const nextConfig = {
         protocol: 'https',
         hostname: '**.amazonaws.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'www.revcomps.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'revcomps.com',
+      },
     ],
   },
 };

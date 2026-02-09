@@ -1,0 +1,76 @@
+---
+description: Guide for building new raffle site scrapers
+globs: src/scrapers/**/*.ts
+alwaysApply: false
+---
+
+# Building a New Scraper
+
+## Architecture
+
+All scrapers extend `BaseScraper` from `src/scrapers/base.ts` and implement two methods:
+- `scrape(context)` — full deep scrape (listing + detail pages)
+- `quickUpdate(context)` — fast listing-only update (% sold, price, status)
+
+## Steps to Add a New Site
+
+### 1. Create scraper file: `src/scrapers/{site-slug}.ts`
+
+```typescript
+import { BrowserContext } from 'playwright';
+import { BaseScraper, ScrapedRaffle, ScraperResult, QuickUpdateResult } from './base';
+
+export class NewSiteScraper extends BaseScraper {
+  name = 'Site Display Name';
+  siteSlug = 'site-slug'; // Must match `sites` table slug
+  baseUrl = 'https://example.com';
+
+  async scrape(context: BrowserContext): Promise<ScraperResult> { /* ... */ }
+  async quickUpdate(context: BrowserContext): Promise<QuickUpdateResult> { /* ... */ }
+}
+```
+
+### 2. Register in `src/scrapers/run-all.ts`
+
+- Import the class
+- Add `new NewSiteScraper()` to the `getAllScrapers()` array
+
+### 3. Insert site row in Supabase `sites` table
+
+```sql
+INSERT INTO sites (name, slug, url, competition_model, active)
+VALUES ('Site Name', 'site-slug', 'https://example.com', 'fixed_odds', true);
+```
+
+### 4. Test with: `npx tsx src/scrapers/run-all.ts --site=site-slug`
+
+## Scraper Pattern (follow existing scrapers)
+
+1. `scrapeListingPage()` — navigate to listing URL, extract card data (title, image, URL, price, % sold)
+2. Loop through cards, visit each detail page with `this.delay(1500)` between requests
+3. `scrapeDetailPage()` — extract full data (total tickets, cash alternative, draw date, draw type)
+4. Return `ScrapedRaffle[]` — persistence/classification handled automatically by `persistScrapeResult()`
+
+## Key Helpers (from BaseScraper)
+
+- `this.navigateWithRetry(page, url)` — retries up to 3 times
+- `this.safeText(page, selector)` — returns text or null
+- `this.safeAttr(page, selector, attr)` — returns attribute or null
+- `this.delay(ms)` — rate limiting (default 1500ms)
+
+## ScrapedRaffle Interface (all values in pence)
+
+Required: `externalId`, `title`, `sourceUrl`
+Optional: `ticketPrice`, `totalTickets`, `ticketsSold`, `percentSold`, `cashAlternative`, `additionalCash`, `prizeValue`, `imageUrl`, `endDate`, `drawType`, `carMake`, `carModel`, `carYear`
+
+## Classification is automatic
+
+`persistScrapeResult()` in `base.ts` calls `classifyPrizeType()` and `classifyCarCategory()` from `src/lib/utils.ts`. You do NOT need to classify in the scraper — just extract raw data.
+
+## Common Pitfalls
+
+- Monetary values must be in **pence** (£2.99 → 299). Use `parsePriceToPence()` from utils.
+- `percentSold` is 0-100 (not 0-1). Parse "26%" as 26, not 0.26.
+- Image URLs: prefer exterior/hero images, not thumbnails or interior shots.
+- End dates: parse to `Date` objects. Handle relative dates ("Draw Tomorrow") and absolute ("15/02/2025").
+- Skip free entries (£0 ticket price) — `persistScrapeResult` filters these.
