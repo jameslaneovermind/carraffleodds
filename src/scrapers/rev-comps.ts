@@ -525,7 +525,7 @@ export class RevCompsScraper extends BaseScraper {
       // Skip free entries
       if (ticketPrice != null && ticketPrice <= 0) return null;
 
-      const title = data.pageTitle || card.title;
+      const title = this.sanitizeTitle(data.pageTitle || card.title, card.url);
       const externalId = extractSlugFromUrl(card.url);
       if (!externalId) return null;
 
@@ -568,7 +568,7 @@ export class RevCompsScraper extends BaseScraper {
 
     return {
       externalId,
-      title: card.title,
+      title: this.sanitizeTitle(card.title, card.url),
       sourceUrl: card.url,
       imageUrl: card.imageUrl,
       ticketPrice: card.ticketPrice,

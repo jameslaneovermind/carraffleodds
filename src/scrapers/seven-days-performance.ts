@@ -20,8 +20,37 @@ export class SevenDaysPerformanceScraper extends BaseScraper {
   siteSlug = '7-days-performance';
   baseUrl = 'https://7daysperformance.co.uk';
 
+  /** Keywords that indicate a high-value prize worth visiting the detail page for */
+  private static readonly HIGH_VALUE_KEYWORDS = [
+    // Cars
+    'bmw', 'audi', 'mercedes', 'ferrari', 'lamborghini', 'porsche', 'mclaren',
+    'volkswagen', 'vw ', 'ford', 'honda', 'toyota', 'nissan',
+    'range rover', 'land rover', 'bentley', 'rolls royce', 'tesla',
+    'volvo', 'vauxhall', 'mini cooper', 'jaguar', 'aston martin',
+    'defender', 'motorhome', 'campervan', 'camper',
+    'peugeot', 'seat ', 'skoda', 'fiat ', 'alfa romeo', 'maserati',
+    'suzuki', 'transit', 'transporter',
+    // Motorcycles
+    'ducati', 'kawasaki', 'yamaha', 'motorcycle', 'motorbike',
+    'triumph', 'fireblade', 'hayabusa', 'sur ron', 'surron',
+    // Other high-value
+    'rolex', 'tag heuer', 'omega', 'breitling', 'watch',
+    'house', 'home', 'property',
+    // Generic vehicle hints
+    'car', 'van', 'bike',
+  ];
+
+  /** Per-detail-page timeout */
+  private static readonly DETAIL_PAGE_TIMEOUT_MS = 45_000;
+
+  private needsDetailPage(title: string): boolean {
+    const lower = title.toLowerCase();
+    return SevenDaysPerformanceScraper.HIGH_VALUE_KEYWORDS.some((kw) => lower.includes(kw));
+  }
+
   /**
-   * Full deep scrape — listing page + all detail pages.
+   * Full scrape — listing page + detail pages for high-value items only.
+   * Non-vehicle / low-value items use listing card data directly.
    */
   async scrape(context: BrowserContext): Promise<ScraperResult> {
     const startTime = Date.now();
@@ -36,15 +65,38 @@ export class SevenDaysPerformanceScraper extends BaseScraper {
       const cards = await this.scrapeListingPage(page);
       console.log(`[${this.name}] Found ${cards.length} competition cards`);
 
-      // Step 2: Visit each detail page
-      for (let i = 0; i < cards.length; i++) {
-        const card = cards[i];
+      // Step 2: Split into high-value (need detail page) vs others (listing only)
+      const detailCards = cards.filter((c) => this.needsDetailPage(c.title));
+      const listingOnlyCards = cards.filter((c) => !this.needsDetailPage(c.title));
+
+      console.log(
+        `[${this.name}] ${detailCards.length} high-value (detail page), ${listingOnlyCards.length} others (listing only)`
+      );
+
+      // Non-high-value: use listing card data directly (fast)
+      for (const card of listingOnlyCards) {
+        const raffle = this.buildRaffleFromCard(card);
+        if (raffle) raffles.push(raffle);
+      }
+
+      // High-value: visit detail pages for total tickets, draw date, etc.
+      for (let i = 0; i < detailCards.length; i++) {
+        const card = detailCards[i];
         const detailUrl = `${this.baseUrl}${card.href}`;
         const externalId = extractSlugFromUrl(card.href);
 
         try {
-          console.log(`[${this.name}] [${i + 1}/${cards.length}] Scraping: ${externalId}`);
-          const raffle = await this.scrapeDetailPage(page, detailUrl, card);
+          console.log(`[${this.name}] [${i + 1}/${detailCards.length}] Detail: ${externalId}`);
+
+          const raffle = await Promise.race([
+            this.scrapeDetailPage(page, detailUrl, card),
+            new Promise<null>((_, reject) =>
+              setTimeout(
+                () => reject(new Error('Detail page timed out')),
+                SevenDaysPerformanceScraper.DETAIL_PAGE_TIMEOUT_MS,
+              ),
+            ),
+          ]);
 
           if (raffle) {
             raffles.push(raffle);
@@ -53,10 +105,14 @@ export class SevenDaysPerformanceScraper extends BaseScraper {
           const msg = `Failed to scrape ${externalId}: ${error instanceof Error ? error.message : String(error)}`;
           console.error(`[${this.name}] ${msg}`);
           errors.push(msg);
+
+          // Fallback to listing card data
+          const fallback = this.buildRaffleFromCard(card);
+          if (fallback) raffles.push(fallback);
         }
 
         // Rate limiting between requests
-        if (i < cards.length - 1) {
+        if (i < detailCards.length - 1) {
           await this.delay(1500);
         }
       }
@@ -361,24 +417,8 @@ export class SevenDaysPerformanceScraper extends BaseScraper {
       }
     }
 
-    // Use detail page title, fall back to card title, then humanized URL slug.
-    // Guard: if the page title is just the site name, it's useless — skip it.
-    const isBogusTitle = (t: string) =>
-      !t || t.length < 5 || /^7\s*days?\s*performance$/i.test(t);
-
-    let title = '';
-    if (!isBogusTitle(data.pageTitle)) {
-      title = data.pageTitle;
-    } else if (!isBogusTitle(card.title)) {
-      title = card.title;
-    } else {
-      // Last resort: humanize the URL slug  ("win-bmw-x3m-130226" → "Win Bmw X3m 130226")
-      const slug = extractSlugFromUrl(url);
-      title = slug
-        .replace(/-/g, ' ')
-        .replace(/\b\w/g, c => c.toUpperCase());
-      console.warn(`[${this.name}] Using slug as title for ${url}`);
-    }
+    // Use detail page title, fall back to card title, then URL slug
+    const title = this.sanitizeTitle(data.pageTitle || card.title, url);
     const externalId = extractSlugFromUrl(url);
 
     // Determine % sold — prefer detail page, fall back to listing
@@ -438,10 +478,12 @@ export class SevenDaysPerformanceScraper extends BaseScraper {
       return null;
     }
 
+    const url = `${this.baseUrl}${card.href}`;
+
     return {
       externalId: extractSlugFromUrl(card.href),
-      title: card.title,
-      sourceUrl: `${this.baseUrl}${card.href}`,
+      title: this.sanitizeTitle(card.title, url),
+      sourceUrl: url,
       imageUrl: card.imageUrl ?? undefined,
       ticketPrice,
       percentSold: card.percentSold ?? undefined,

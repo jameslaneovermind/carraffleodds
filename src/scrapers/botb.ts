@@ -206,7 +206,7 @@ export class BotbScraper extends BaseScraper {
 
         raffles.push({
           externalId,
-          title: card.title,
+          title: this.sanitizeTitle(card.title, card.url),
           sourceUrl: card.url,
           imageUrl: card.imageUrl || undefined,
           ticketPrice,

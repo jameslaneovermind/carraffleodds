@@ -57,6 +57,27 @@ export class LuckyDayCompetitionsScraper extends BaseScraper {
 
   private static readonly DETAIL_PAGE_TIMEOUT_MS = 45_000;
 
+  /** Keywords that indicate a high-value prize worth visiting the detail page for */
+  private static readonly HIGH_VALUE_KEYWORDS = [
+    'bmw', 'audi', 'mercedes', 'ferrari', 'lamborghini', 'porsche', 'mclaren',
+    'volkswagen', 'vw ', 'ford', 'honda', 'toyota', 'nissan',
+    'range rover', 'land rover', 'bentley', 'rolls royce', 'tesla',
+    'volvo', 'vauxhall', 'mini cooper', 'jaguar', 'aston martin',
+    'defender', 'motorhome', 'campervan', 'camper',
+    'peugeot', 'seat ', 'skoda', 'fiat ', 'alfa romeo', 'maserati',
+    'suzuki', 'transit', 'transporter',
+    'ducati', 'kawasaki', 'yamaha', 'motorcycle', 'motorbike',
+    'triumph', 'fireblade', 'hayabusa', 'sur ron', 'surron',
+    'rolex', 'tag heuer', 'omega', 'breitling', 'watch',
+    'house', 'home', 'property',
+    'car', 'van', 'bike',
+  ];
+
+  private needsDetailPage(title: string): boolean {
+    const lower = title.toLowerCase();
+    return LuckyDayCompetitionsScraper.HIGH_VALUE_KEYWORDS.some((kw) => lower.includes(kw));
+  }
+
   // ==========================================
   // Full Scrape
   // ==========================================
@@ -70,11 +91,26 @@ export class LuckyDayCompetitionsScraper extends BaseScraper {
       const cards = await this.scrapeListingPage(context);
       console.log(`[${this.name}] Found ${cards.length} competition cards`);
 
-      // Listing page has most data; visit detail pages for cash alternative
-      for (let i = 0; i < cards.length; i++) {
-        const card = cards[i];
+      // Listing page has rich data (price, total tickets, % sold, end dates).
+      // Only visit detail pages for high-value items (to get cash alternative).
+      const detailCards = cards.filter((c) => this.needsDetailPage(c.title));
+      const listingOnlyCards = cards.filter((c) => !this.needsDetailPage(c.title));
+
+      console.log(
+        `[${this.name}] ${detailCards.length} high-value (detail page), ${listingOnlyCards.length} others (listing only)`
+      );
+
+      // Non-high-value: use listing card data directly
+      for (const card of listingOnlyCards) {
+        const raffle = this.buildRaffleFromCard(card);
+        if (raffle) raffles.push(raffle);
+      }
+
+      // High-value: visit detail pages for cash alternative
+      for (let i = 0; i < detailCards.length; i++) {
+        const card = detailCards[i];
         const slug = extractSlugFromUrl(card.url);
-        console.log(`[${this.name}] [${i + 1}/${cards.length}] Scraping: ${slug}`);
+        console.log(`[${this.name}] [${i + 1}/${detailCards.length}] Detail: ${slug}`);
 
         try {
           const raffle = await Promise.race([
@@ -375,7 +411,7 @@ export class LuckyDayCompetitionsScraper extends BaseScraper {
 
       return {
         externalId,
-        title: pageData.title || card.title,
+        title: this.sanitizeTitle(pageData.title || card.title, card.url),
         sourceUrl: card.url,
         imageUrl: pageData.imageUrl || card.imageUrl,
         ticketPrice: card.ticketPrice,
@@ -406,7 +442,7 @@ export class LuckyDayCompetitionsScraper extends BaseScraper {
 
     return {
       externalId,
-      title: card.title,
+      title: this.sanitizeTitle(card.title, card.url),
       sourceUrl: card.url,
       imageUrl: card.imageUrl,
       ticketPrice: card.ticketPrice,

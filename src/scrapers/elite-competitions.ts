@@ -293,8 +293,8 @@ export class EliteCompetitionsScraper extends BaseScraper {
         ticketsSold = Math.round((percentSold / 100) * totalTickets);
       }
 
-      // Title — prefer h1, fallback to card
-      const title = pageData.title || card.title;
+      // Title — prefer h1, fallback to card, then URL slug
+      const title = this.sanitizeTitle(pageData.title || card.title, card.url);
 
       // Image — prefer detail page, fallback to card
       const imageUrl = pageData.imageUrl || card.imageUrl;
@@ -327,7 +327,7 @@ export class EliteCompetitionsScraper extends BaseScraper {
 
     return {
       externalId,
-      title: card.title,
+      title: this.sanitizeTitle(card.title, card.url),
       sourceUrl: card.url,
       imageUrl: card.imageUrl,
       ticketPrice: card.ticketPrice,

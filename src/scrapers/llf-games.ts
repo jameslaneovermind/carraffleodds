@@ -430,7 +430,7 @@ export class LlfGamesScraper extends BaseScraper {
 
       return {
         externalId,
-        title: pageData.title || card.title,
+        title: this.sanitizeTitle(pageData.title || card.title, card.url),
         sourceUrl: card.url,
         imageUrl: pageData.imageUrl || card.imageUrl,
         ticketPrice,
@@ -456,7 +456,7 @@ export class LlfGamesScraper extends BaseScraper {
 
     return {
       externalId,
-      title: card.title,
+      title: this.sanitizeTitle(card.title, card.url),
       sourceUrl: card.url,
       imageUrl: card.imageUrl,
       ticketPrice: card.ticketPrice,

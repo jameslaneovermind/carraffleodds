@@ -1,5 +1,5 @@
 import { Browser, BrowserContext, Page } from 'playwright';
-import { classifyPrizeType, classifyCarCategory, parseCashFromTitle, calculateRaffleMetrics } from '../lib/utils';
+import { classifyPrizeType, classifyCarCategory, parseCashFromTitle, calculateRaffleMetrics, extractSlugFromUrl } from '../lib/utils';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 // ============================================
@@ -70,6 +70,32 @@ export abstract class BaseScraper {
    */
   protected async delay(ms: number = 1500): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Ensure a title is valid. If it matches the site name or is too short,
+   * fall back to the URL slug humanized as a title.
+   */
+  protected sanitizeTitle(
+    title: string | undefined | null,
+    fallbackUrl: string,
+  ): string {
+    if (title && title.length >= 5 && !this.isBogusTitle(title)) {
+      return title;
+    }
+    // Humanize the URL slug: "win-bmw-x3m-130226" → "Win Bmw X3m 130226"
+    const slug = extractSlugFromUrl(fallbackUrl);
+    return slug
+      .replace(/-/g, ' ')
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+
+  /** Check if a title is just the site name or otherwise useless */
+  private isBogusTitle(title: string): boolean {
+    const lower = title.toLowerCase().trim();
+    const siteLower = this.name.toLowerCase();
+    // Exact match or very close to site name
+    return lower === siteLower || lower.replace(/[^a-z0-9]/g, '') === siteLower.replace(/[^a-z0-9]/g, '');
   }
 
   /**
