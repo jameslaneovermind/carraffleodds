@@ -244,11 +244,17 @@ const PRIZE_TYPE_RULES: Record<Exclude<PrizeType, 'other'>, string[]> = {
     'car giveaway', 'free car',
   ],
   motorcycle: [
-    'ducati', 'kawasaki ninja', 'yamaha r1', 'yamaha mt',
+    'ducati', 'kawasaki ninja', 'kawasaki z', 'yamaha r1', 'yamaha yzf', 'yamaha mt',
     'motorcycle', 'motorbike', 'panigale',
-    'honda cb', 'triumph street', 'triumph speed',
+    'honda cb', 'triumph street', 'triumph speed', 'triumph tiger',
     'fireblade', 'hayabusa',
     'sur ron', 'surron',
+    // BMW motorcycles — must be checked before generic 'bmw' car match
+    'bmw r1250', 'bmw r 1250', 'bmw r1300', 'bmw r 1300',
+    'bmw s1000', 'bmw s 1000', 'bmw g 310', 'bmw g310',
+    'bmw f 900', 'bmw f900', 'bmw f 800', 'bmw f800',
+    'bmw r ninet', 'bmw rninet', 'bmw ce 04',
+    'bmw gs', 'bmw gsa',
   ],
   cash: [
     'tax free cash', 'win £',
@@ -279,6 +285,7 @@ const PRIZE_TYPE_RULES: Record<Exclude<PrizeType, 'other'>, string[]> = {
 const NOT_REAL_VEHICLE_PATTERNS = [
   'ride on', 'kids', 'toy', 'rc ', 'r/c', '1:8', '1:10', '1:16', '1:18',
   'scale', 'remote control', 'rtr', 'hpi ', 'licensed ride',
+  'lego', 'playmobil', 'hot wheels', 'hotwheels', 'diecast', 'die cast',
   'mini bag', 'mini bundle', 'mini pack',
   'gucci', 'dior', 'louis vuitton', 'prada',
 ];
@@ -309,17 +316,18 @@ export function classifyPrizeType(title: string): PrizeType {
   // Check if title contains NOT-a-real-vehicle patterns
   const isNotRealVehicle = NOT_REAL_VEHICLE_PATTERNS.some(p => lowerTitle.includes(p));
 
-  // Check car first — many car prizes also mention cash alternatives
-  if (!isNotRealVehicle) {
-    for (const keyword of PRIZE_TYPE_RULES.car) {
-      if (lowerTitle.includes(keyword)) return 'car';
-    }
-  }
-
-  // Check motorcycle before others
+  // Check motorcycle FIRST — specific patterns like 'bmw r1250' must match
+  // before generic car patterns like 'bmw'
   if (!isNotRealVehicle) {
     for (const keyword of PRIZE_TYPE_RULES.motorcycle) {
       if (lowerTitle.includes(keyword)) return 'motorcycle';
+    }
+  }
+
+  // Check car — many car prizes also mention cash alternatives
+  if (!isNotRealVehicle) {
+    for (const keyword of PRIZE_TYPE_RULES.car) {
+      if (lowerTitle.includes(keyword)) return 'car';
     }
   }
 
