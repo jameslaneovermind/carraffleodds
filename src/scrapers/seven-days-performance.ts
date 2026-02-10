@@ -250,16 +250,25 @@ export class SevenDaysPerformanceScraper extends BaseScraper {
       return this.buildRaffleFromCard(card);
     }
 
-    // Wait for content to render
-    await page.waitForTimeout(4000);
+    // Wait for content to render (extra time for slow servers)
+    await page.waitForTimeout(5000);
 
     const data = await page.evaluate(() => {
       const body = document.body.innerText;
 
-      // === Clean title from document.title ===
-      const pageTitle = (document.title || '')
-        .replace(/\s*-\s*7days Performance$/i, '')
+      // === Clean title ===
+      // Try document.title first, then h1/product-title elements
+      let pageTitle = (document.title || '')
+        .replace(/\s*[-–|]\s*7\s*days?\s*Performance.*$/i, '')
         .trim();
+
+      // If document.title was just the site name, try h1 or product title
+      if (!pageTitle || /^7\s*days?\s*performance$/i.test(pageTitle)) {
+        const h1 = document.querySelector('h1.product_title, h1.entry-title, h1');
+        if (h1) {
+          pageTitle = (h1 as HTMLElement).innerText.trim();
+        }
+      }
 
       // === Total entries ===
       // Pattern: "total amount of entries for this competition is (X,XXX)" or "(XXXX)"
@@ -352,8 +361,24 @@ export class SevenDaysPerformanceScraper extends BaseScraper {
       }
     }
 
-    // Use detail page title, fall back to card title
-    const title = data.pageTitle || card.title;
+    // Use detail page title, fall back to card title, then humanized URL slug.
+    // Guard: if the page title is just the site name, it's useless — skip it.
+    const isBogusTitle = (t: string) =>
+      !t || t.length < 5 || /^7\s*days?\s*performance$/i.test(t);
+
+    let title = '';
+    if (!isBogusTitle(data.pageTitle)) {
+      title = data.pageTitle;
+    } else if (!isBogusTitle(card.title)) {
+      title = card.title;
+    } else {
+      // Last resort: humanize the URL slug  ("win-bmw-x3m-130226" → "Win Bmw X3m 130226")
+      const slug = extractSlugFromUrl(url);
+      title = slug
+        .replace(/-/g, ' ')
+        .replace(/\b\w/g, c => c.toUpperCase());
+      console.warn(`[${this.name}] Using slug as title for ${url}`);
+    }
     const externalId = extractSlugFromUrl(url);
 
     // Determine % sold — prefer detail page, fall back to listing
