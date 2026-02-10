@@ -60,8 +60,9 @@ export function calculateExpectedValue(
 }
 
 /**
- * Compute value score from a Raffle object (client-side).
- * Returns the expected return per £1 spent, or null.
+ * Compute raw value ratio from a Raffle object (client-side).
+ * Returns the expected return per £1 spent (0–1+), or null.
+ * Used internally for sorting and for computing the 0-100 score.
  */
 export function getValueScore(raffle: {
   prize_value: number | null;
@@ -69,7 +70,6 @@ export function getValueScore(raffle: {
   total_tickets: number | null;
   ticket_price: number | null;
 }): number | null {
-  // Prefer DB-computed value if available
   const value = raffle.prize_value || raffle.cash_alternative;
   if (!value || !raffle.total_tickets || !raffle.ticket_price) return null;
   if (raffle.total_tickets <= 0 || raffle.ticket_price <= 0) return null;
@@ -77,29 +77,44 @@ export function getValueScore(raffle: {
 }
 
 /**
- * Format value score for display.
- * 0.75 → "75p", 1.2 → "£1.20", 0.04 → "4p"
+ * Convert raw value ratio to a 0-100 score for display.
+ * Uses a square-root curve so scores spread nicely across the range:
+ *   raw 1.00 → 100,  0.50 → 71,  0.25 → 50,  0.10 → 32,  0.01 → 10
  */
-export function formatValueScore(score: number | null): string {
-  if (score == null) return 'N/A';
-  const pence = Math.round(score * 100);
-  if (pence >= 100) {
-    const pounds = (pence / 100).toFixed(2);
-    return `£${pounds}`;
-  }
-  return `${pence}p`;
+export function getValueScore100(raffle: {
+  prize_value: number | null;
+  cash_alternative: number | null;
+  total_tickets: number | null;
+  ticket_price: number | null;
+}): number | null {
+  const raw = getValueScore(raffle);
+  if (raw == null) return null;
+  return Math.min(Math.round(Math.sqrt(raw) * 100), 100);
 }
 
 /**
- * Get a qualitative label for a value score.
+ * Format value score for display: "72"
  */
-export function getValueScoreLabel(score: number | null): { label: string; color: string } {
-  if (score == null) return { label: '', color: 'text-slate-400' };
-  if (score >= 0.70) return { label: 'Excellent', color: 'text-emerald-600' };
-  if (score >= 0.45) return { label: 'Great', color: 'text-green-600' };
-  if (score >= 0.25) return { label: 'Good', color: 'text-blue-600' };
-  if (score >= 0.10) return { label: 'Fair', color: 'text-amber-600' };
-  return { label: 'Low', color: 'text-slate-400' };
+export function formatValueScore(score: number | null): string {
+  if (score == null) return '—';
+  return String(score);
+}
+
+/**
+ * Get a qualitative label + colors for a 0-100 value score.
+ */
+export function getValueScoreLabel(score100: number | null): {
+  label: string;
+  color: string;
+  bgColor: string;
+  ringColor: string;
+} {
+  if (score100 == null) return { label: '', color: 'text-slate-400', bgColor: 'bg-slate-100', ringColor: 'ring-slate-200' };
+  if (score100 >= 80) return { label: 'Excellent', color: 'text-emerald-600', bgColor: 'bg-emerald-50', ringColor: 'ring-emerald-200' };
+  if (score100 >= 60) return { label: 'Great', color: 'text-green-600', bgColor: 'bg-green-50', ringColor: 'ring-green-200' };
+  if (score100 >= 40) return { label: 'Good', color: 'text-blue-600', bgColor: 'bg-blue-50', ringColor: 'ring-blue-200' };
+  if (score100 >= 20) return { label: 'Fair', color: 'text-amber-600', bgColor: 'bg-amber-50', ringColor: 'ring-amber-200' };
+  return { label: 'Low', color: 'text-slate-500', bgColor: 'bg-slate-50', ringColor: 'ring-slate-200' };
 }
 
 /**

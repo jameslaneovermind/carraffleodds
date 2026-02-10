@@ -26,6 +26,10 @@ import {
 import { DreamCarGiveawaysScraper } from './dream-car-giveaways';
 import { SevenDaysPerformanceScraper } from './seven-days-performance';
 import { RevCompsScraper } from './rev-comps';
+import { EliteCompetitionsScraper } from './elite-competitions';
+import { ClickCompetitionsScraper } from './click-competitions';
+import { LuckyDayCompetitionsScraper } from './lucky-day-competitions';
+import { LlfGamesScraper } from './llf-games';
 
 // ============================================
 // Registry of all scrapers
@@ -36,9 +40,11 @@ export function getAllScrapers(): BaseScraper[] {
     new DreamCarGiveawaysScraper(),
     new SevenDaysPerformanceScraper(),
     new RevCompsScraper(),
+    new EliteCompetitionsScraper(),
+    new ClickCompetitionsScraper(),
+    new LuckyDayCompetitionsScraper(),
+    new LlfGamesScraper(),
     // Add more scrapers here as they're built:
-    // new EliteCompetitionsScraper(),
-    // new BotbScraper(),
   ];
 }
 

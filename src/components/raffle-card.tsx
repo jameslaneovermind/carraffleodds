@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { SiteBadge } from './site-badge';
 import { ProgressBar } from './progress-bar';
 import { CountdownTimer } from './countdown-timer';
-import { formatPence, formatOdds, getValueScore, formatValueScore, getValueScoreLabel } from '@/lib/utils';
+import { formatPence, formatOdds, getValueScore100, formatValueScore, getValueScoreLabel } from '@/lib/utils';
 import type { Raffle } from '@/lib/types';
 
 interface RaffleCardProps {
@@ -37,7 +37,7 @@ export function RaffleCard({ raffle }: RaffleCardProps) {
   const endingSoon = isEndingSoon(raffle.end_date);
   const isNewRaffle = isNew(raffle.created_at);
   const [imgState, setImgState] = useState<'optimized' | 'unoptimized' | 'failed'>('optimized');
-  const valueScore = getValueScore(raffle);
+  const valueScore = getValueScore100(raffle);
   const vsLabel = getValueScoreLabel(valueScore);
 
   return (
@@ -66,14 +66,16 @@ export function RaffleCard({ raffle }: RaffleCardProps) {
 
         {/* Value Score badge — top right of image */}
         {valueScore != null && (
-          <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm rounded-lg px-2 py-1 shadow-sm border border-slate-200/50">
-            <div className="flex items-center gap-1">
-              <Zap className={`h-3 w-3 ${vsLabel.color}`} />
-              <span className={`text-xs font-bold ${vsLabel.color}`}>
+          <div className={`absolute top-2 right-2 ${vsLabel.bgColor} backdrop-blur-sm rounded-lg px-2 py-1.5 shadow-sm ring-1 ${vsLabel.ringColor}`}>
+            <div className="flex items-center gap-1.5">
+              <span className={`text-base font-extrabold leading-none tabular-nums ${vsLabel.color}`}>
                 {formatValueScore(valueScore)}
               </span>
+              <div className="flex flex-col">
+                <span className="text-[8px] text-slate-400 leading-none">/100</span>
+                <span className={`text-[9px] font-semibold leading-tight ${vsLabel.color}`}>{vsLabel.label}</span>
+              </div>
             </div>
-            <p className="text-[9px] text-slate-500 leading-tight">per £1</p>
           </div>
         )}
       </div>
@@ -139,14 +141,17 @@ export function RaffleCard({ raffle }: RaffleCardProps) {
           <div>
             <p className="text-xs text-slate-400 mb-0.5 flex items-center gap-1">
               <Zap className="h-3 w-3" />
-              Value
+              Value Score
             </p>
             {valueScore != null ? (
-              <p className={`text-sm font-bold tabular-nums ${vsLabel.color}`}>
-                {formatValueScore(valueScore)}<span className="text-xs font-normal text-slate-400">/£1</span>
-              </p>
+              <div className="flex items-baseline gap-1">
+                <span className={`text-sm font-bold tabular-nums ${vsLabel.color}`}>
+                  {formatValueScore(valueScore)}
+                </span>
+                <span className="text-xs text-slate-400">/100</span>
+              </div>
             ) : (
-              <p className="text-sm text-slate-400">N/A</p>
+              <p className="text-sm text-slate-400">—</p>
             )}
           </div>
         </div>

@@ -38,6 +38,26 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'revcomps.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'images.elitecompetitions.co.uk',
+      },
+      {
+        protocol: 'https',
+        hostname: 'storage.googleapis.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.clickcompetitions.co.uk',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.luckydaycompetitions.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'llfgames.com',
+      },
     ],
   },
 };

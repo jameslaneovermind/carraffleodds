@@ -189,7 +189,7 @@ export default async function HomePage() {
                 Best Value Right Now
               </h2>
               <p className="mt-1 text-slate-500">
-                Highest expected return per £1 spent
+                Top rated competitions by our value algorithm
               </p>
             </div>
             <Link
