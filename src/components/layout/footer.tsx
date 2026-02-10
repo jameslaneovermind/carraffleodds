@@ -25,6 +25,7 @@ export function Footer() {
               <li><Link href="/raffles/cash" className="text-sm text-slate-500 hover:text-blue-500 transition-colors">Cash Raffles</Link></li>
               <li><Link href="/raffles/tech" className="text-sm text-slate-500 hover:text-blue-500 transition-colors">Tech Raffles</Link></li>
               <li><Link href="/raffles/watches" className="text-sm text-slate-500 hover:text-blue-500 transition-colors">Watch Raffles</Link></li>
+              <li><Link href="/competitions" className="text-sm text-slate-500 hover:text-blue-500 transition-colors">Skill Competitions</Link></li>
             </ul>
           </div>
 

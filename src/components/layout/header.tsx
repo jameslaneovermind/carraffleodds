@@ -8,6 +8,7 @@ import { Logo } from '@/components/logo';
 
 const NAV_ITEMS = [
   { href: '/raffles', label: 'All Raffles' },
+  { href: '/competitions', label: 'Skill Comps' },
   { href: '/ending-soon', label: 'Ending Soon' },
   { href: '/raffles/cars', label: 'Cars' },
   { href: '/raffles/cash', label: 'Cash' },

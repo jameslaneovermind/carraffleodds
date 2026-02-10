@@ -28,7 +28,7 @@ async function fetchEndingSoonRaffles() {
   // Fetch all active/ending_soon raffles with an end_date in the future
   const { data, error } = await supabase
     .from('raffles')
-    .select('*, site:sites(id, name, slug, url, logo_url)')
+    .select('*, site:sites(id, name, slug, url, logo_url, competition_model)')
     .in('status', ['active', 'ending_soon'])
     .not('end_date', 'is', null)
     .gt('end_date', new Date().toISOString())
@@ -39,7 +39,8 @@ async function fetchEndingSoonRaffles() {
     return [];
   }
 
-  return (data ?? []) as (Raffle & { site: Pick<Site, 'id' | 'name' | 'slug' | 'url' | 'logo_url'> })[];
+  return ((data ?? []) as (Raffle & { site: Pick<Site, 'id' | 'name' | 'slug' | 'url' | 'logo_url' | 'competition_model'> })[])
+    .filter((r) => r.site?.competition_model !== 'spot_the_ball');
 }
 
 export default async function EndingSoonPage() {

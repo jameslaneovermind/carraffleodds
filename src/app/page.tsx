@@ -22,11 +22,13 @@ async function getHomeData() {
   // Fetch all active raffles
   const { data: raffles } = await supabase
     .from('raffles')
-    .select('*, site:sites(id, name, slug, url, logo_url)')
+    .select('*, site:sites(id, name, slug, url, logo_url, competition_model)')
     .eq('status', 'active')
     .order('end_date', { ascending: true, nullsFirst: false });
 
-  const allRaffles = (raffles ?? []) as Raffle[];
+  const allRaffles = ((raffles ?? []) as Raffle[]).filter(
+    (r) => (r.site as { competition_model?: string } | null)?.competition_model !== 'spot_the_ball'
+  );
 
   // Stats
   const totalRaffles = allRaffles.length;

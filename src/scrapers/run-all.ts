@@ -30,6 +30,7 @@ import { EliteCompetitionsScraper } from './elite-competitions';
 import { ClickCompetitionsScraper } from './click-competitions';
 import { LuckyDayCompetitionsScraper } from './lucky-day-competitions';
 import { LlfGamesScraper } from './llf-games';
+import { BotbScraper } from './botb';
 
 // ============================================
 // Registry of all scrapers
@@ -44,6 +45,7 @@ export function getAllScrapers(): BaseScraper[] {
     new ClickCompetitionsScraper(),
     new LuckyDayCompetitionsScraper(),
     new LlfGamesScraper(),
+    new BotbScraper(),
     // Add more scrapers here as they're built:
   ];
 }

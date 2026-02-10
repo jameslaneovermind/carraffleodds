@@ -58,6 +58,14 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'llfgames.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'cdn.botb.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.botb.com',
+      },
     ],
   },
 };
