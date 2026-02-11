@@ -38,14 +38,11 @@ async function getHomeData() {
     .filter((r) => r.odds_ratio != null && r.odds_ratio > 0)
     .sort((a, b) => (a.odds_ratio ?? Infinity) - (b.odds_ratio ?? Infinity))[0];
 
-  // Featured: lead with best-value car raffles, then fill with best overall
-  const withValue = allRaffles
-    .filter((r) => r.image_url && getValueScore(r) != null)
-    .sort((a, b) => (getValueScore(b) ?? 0) - (getValueScore(a) ?? 0));
-  const bestCars = withValue.filter((r) => r.prize_type === 'car').slice(0, 3);
-  const bestCarIds = new Set(bestCars.map((r) => r.id));
-  const bestOther = withValue.filter((r) => !bestCarIds.has(r.id)).slice(0, 6 - bestCars.length);
-  const featured = [...bestCars, ...bestOther].slice(0, 6);
+  // Featured: best-value car raffles only
+  const featured = allRaffles
+    .filter((r) => r.image_url && r.prize_type === 'car' && getValueScore(r) != null)
+    .sort((a, b) => (getValueScore(b) ?? 0) - (getValueScore(a) ?? 0))
+    .slice(0, 6);
 
   // Ending soon: next 6 with end dates
   const now = new Date();
@@ -191,11 +188,11 @@ export default async function HomePage() {
                 Best Value Right Now
               </h2>
               <p className="mt-1 text-slate-500">
-                Top rated competitions by our value algorithm
+                Top rated car competitions by our value algorithm
               </p>
             </div>
             <Link
-              href="/raffles?sort=best-value"
+              href="/raffles/cars"
               className="hidden sm:inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
             >
               View all
@@ -207,10 +204,10 @@ export default async function HomePage() {
 
           <div className="mt-6 text-center sm:hidden">
             <Link
-              href="/raffles?sort=best-value"
+              href="/raffles/cars"
               className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700"
             >
-              View all best value
+              View all car raffles
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>

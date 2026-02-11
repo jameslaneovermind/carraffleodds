@@ -64,20 +64,6 @@ export function RaffleCard({ raffle }: RaffleCardProps) {
           </div>
         )}
 
-        {/* Value Score badge — top right of image */}
-        {valueScore != null && (
-          <div className={`absolute top-2 right-2 ${vsLabel.bgColor} backdrop-blur-sm rounded-lg px-2 py-1.5 shadow-sm ring-1 ${vsLabel.ringColor}`}>
-            <div className="flex items-center gap-1.5">
-              <span className={`text-base font-extrabold leading-none tabular-nums ${vsLabel.color}`}>
-                {formatValueScore(valueScore)}
-              </span>
-              <div className="flex flex-col">
-                <span className="text-[8px] text-slate-400 leading-none">/100</span>
-                <span className={`text-[9px] font-semibold leading-tight ${vsLabel.color}`}>{vsLabel.label}</span>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Content */}

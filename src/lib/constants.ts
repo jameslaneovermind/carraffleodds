@@ -102,11 +102,11 @@ export interface SortOption {
 }
 
 export const SORT_OPTIONS: SortOption[] = [
-  { value: 'ending-soon', label: 'Ending Soon' },
   { value: 'best-value', label: 'Best Value' },
+  { value: 'ending-soon', label: 'Ending Soon' },
   { value: 'best-odds', label: 'Best Odds' },
   { value: 'lowest-price', label: 'Lowest Price' },
   { value: 'newest', label: 'Newest' },
 ];
 
-export const DEFAULT_SORT = 'ending-soon';
+export const DEFAULT_SORT = 'best-value';
