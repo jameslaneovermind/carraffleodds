@@ -32,8 +32,16 @@ async function getHomeData() {
 
   // Stats
   const totalRaffles = allRaffles.length;
-  const siteNames = new Set(allRaffles.map((r) => (r.site as { name: string } | null)?.name).filter(Boolean));
+  const siteMap = new Map<string, { name: string; url: string }>();
+  for (const r of allRaffles) {
+    const site = r.site as { name: string; slug: string; url: string } | null;
+    if (site && !siteMap.has(site.slug)) {
+      siteMap.set(site.slug, { name: site.name, url: site.url });
+    }
+  }
+  const siteNames = new Set(Array.from(siteMap.values()).map((s) => s.name));
   const totalSites = siteNames.size;
+  const siteList = Array.from(siteMap.values());
   const lowestOdds = allRaffles
     .filter((r) => r.odds_ratio != null && r.odds_ratio > 0)
     .sort((a, b) => (a.odds_ratio ?? Infinity) - (b.odds_ratio ?? Infinity))[0];
@@ -80,6 +88,7 @@ async function getHomeData() {
     featured,
     endingSoon,
     siteNames: Array.from(siteNames),
+    siteList,
     totalPrizeValuePounds,
     totalTicketsMonitored,
     lastUpdated,
@@ -95,6 +104,7 @@ export default async function HomePage() {
     featured,
     endingSoon,
     siteNames,
+    siteList,
     totalPrizeValuePounds,
     totalTicketsMonitored,
     lastUpdated,
@@ -455,13 +465,16 @@ export default async function HomePage() {
             Comparing odds across trusted UK competition sites
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
-            {siteNames.map((name) => (
-              <span
-                key={name}
+            {siteList.map((site) => (
+              <a
+                key={site.name}
+                href={site.url}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-lg font-semibold text-slate-400 hover:text-slate-600 transition-colors"
               >
-                {name}
-              </span>
+                {site.name}
+              </a>
             ))}
           </div>
           <p className="mt-4 text-center text-xs text-slate-400">
