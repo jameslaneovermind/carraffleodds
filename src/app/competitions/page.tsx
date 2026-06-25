@@ -24,6 +24,7 @@ async function fetchSkillCompetitions() {
     .select('*, site:sites!inner(id, name, slug, url, logo_url, competition_model)')
     .eq('status', 'active')
     .eq('site.competition_model', 'spot_the_ball')
+    .gt('end_date', new Date().toISOString())
     .order('end_date', { ascending: true, nullsFirst: false });
 
   if (error) {

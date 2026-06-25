@@ -20,7 +20,8 @@ async function getStats() {
   const { count: raffleCount } = await supabase
     .from('raffles')
     .select('*', { count: 'exact', head: true })
-    .in('status', ['active', 'ending_soon']);
+    .in('status', ['active', 'ending_soon'])
+    .gt('end_date', new Date().toISOString());
 
   const { count: siteCount } = await supabase
     .from('sites')

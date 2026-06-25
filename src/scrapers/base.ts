@@ -236,16 +236,22 @@ export async function persistScrapeResult(
     // Check if exists
     const { data: existing } = await supabase
       .from('raffles')
-      .select('id')
+      .select('id, status')
       .eq('site_id', site.id)
       .eq('external_id', raffle.externalId)
       .single();
 
     if (existing) {
-      // Update existing
+      // Never overwrite terminal statuses — a drawn/cancelled raffle stays that way
+      // even if the scraper still sees it listed on the source site.
+      const TERMINAL_STATUSES = ['drawn', 'cancelled'];
+      const updateRow = TERMINAL_STATUSES.includes(existing.status ?? '')
+        ? Object.fromEntries(Object.entries(row).filter(([k]) => k !== 'status'))
+        : row;
+
       const { error } = await supabase
         .from('raffles')
-        .update(row)
+        .update(updateRow)
         .eq('id', existing.id);
 
       if (error) {

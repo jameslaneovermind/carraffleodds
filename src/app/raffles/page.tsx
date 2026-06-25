@@ -25,6 +25,7 @@ async function fetchRaffles() {
     .from('raffles')
     .select('*, site:sites(id, name, slug, url, logo_url, competition_model)')
     .eq('status', 'active')
+    .gt('end_date', new Date().toISOString())
     .order('end_date', { ascending: true, nullsFirst: false });
 
   if (error) {
