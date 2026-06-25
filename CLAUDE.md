@@ -74,6 +74,18 @@ Recurring procedures live in `.claude/skills/`. Use them; don't reinvent the ste
 
 **Docs vs skills:** docs are *reference and reasoning* (what's true, why we chose it). Skills are *procedures* (when doing task X, follow these steps). Keep them separate; don't duplicate one into the other.
 
+## Working on tickets (superpowers workflow)
+
+All ticket work runs through the superpowers skill system. Follow this order every time:
+
+1. **Before any implementation** — run `superpowers:brainstorming` to explore intent and requirements.
+2. **Before writing code** — run `superpowers:writing-plans` to produce a written plan; run `superpowers:test-driven-development` to write tests first.
+3. **If a bug or unexpected behaviour** — run `superpowers:systematic-debugging` before proposing any fix.
+4. **Before claiming done** — run `superpowers:verification-before-completion` to confirm it actually works.
+5. **When implementation is complete** — run `superpowers:requesting-code-review`, then `superpowers:finishing-a-development-branch`.
+
+Load the relevant project skill alongside these (`site-domain` + whichever of `write-scraper / add-site / write-content` fits the ticket). Tickets live in Linear; each one lists which skills to load.
+
 ## When unsure
 
 If a request conflicts with a hard rule, or a doc seems out of date versus the code, stop and surface it rather than guessing. A flagged question costs a minute; a confidently-wrong build costs an afternoon.
