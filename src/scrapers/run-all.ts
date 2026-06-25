@@ -252,24 +252,12 @@ export async function runAllScrapers(options: OrchestratorOptions = {}): Promise
 // ============================================
 
 export async function cleanupExpiredRaffles(): Promise<void> {
-  console.log('[Cleanup] Marking expired raffles...');
+  console.log('[Cleanup] Running raffle cleanup...');
   const supabase = createServiceClient();
+  const now = new Date().toISOString();
 
-  // Mark raffles past their end date as 'drawn'
-  const { data, error } = await supabase
-    .from('raffles')
-    .update({ status: 'drawn' })
-    .lt('end_date', new Date().toISOString())
-    .in('status', ['active', 'ending_soon'])
-    .select('id');
-
-  if (error) {
-    console.error('[Cleanup] Error:', error.message);
-  } else {
-    console.log(`[Cleanup] Marked ${data?.length || 0} raffles as drawn`);
-  }
-
-  // Take snapshots of all active raffles
+  // Step 1: Snapshot all currently active/ending_soon raffles BEFORE any status change.
+  // This captures a final odds record for raffles that are about to be marked drawn.
   const { data: activeRaffles } = await supabase
     .from('raffles')
     .select('id, tickets_sold, percent_sold, ticket_price')
@@ -292,6 +280,37 @@ export async function cleanupExpiredRaffles(): Promise<void> {
     } else {
       console.log(`[Cleanup] Saved ${snapshots.length} snapshots`);
     }
+  }
+
+  // Step 2: Mark expired raffles as drawn.
+  const { data: drawn, error: drawnError } = await supabase
+    .from('raffles')
+    .update({ status: 'drawn' })
+    .lt('end_date', now)
+    .in('status', ['active', 'ending_soon'])
+    .select('id');
+
+  if (drawnError) {
+    console.error('[Cleanup] Error marking drawn:', drawnError.message);
+  } else {
+    console.log(`[Cleanup] Marked ${drawn?.length ?? 0} raffles as drawn`);
+  }
+
+  // Step 3: Promote active raffles ending within 48 hours to ending_soon.
+  const fortyEightHoursFromNow = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+
+  const { data: promoted, error: promotedError } = await supabase
+    .from('raffles')
+    .update({ status: 'ending_soon' })
+    .eq('status', 'active')
+    .gt('end_date', now)
+    .lte('end_date', fortyEightHoursFromNow)
+    .select('id');
+
+  if (promotedError) {
+    console.error('[Cleanup] Error promoting ending_soon:', promotedError.message);
+  } else {
+    console.log(`[Cleanup] Promoted ${promoted?.length ?? 0} raffles to ending_soon`);
   }
 }
 

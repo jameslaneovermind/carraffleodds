@@ -62,7 +62,7 @@ async function ensureBrowser(): Promise<Browser> {
 const JOB_TIMEOUT_MS: Record<string, number> = {
   'Full Scrape': 45 * 60 * 1000,   // 45 minutes max (supports 9 scrapers at concurrency 3)
   'Quick Update': 20 * 60 * 1000,  // 20 minutes max (supports 9 scrapers at concurrency 2)
-  'Daily Cleanup': 5 * 60 * 1000,  // 5 minutes max
+  'Cleanup': 5 * 60 * 1000,        // 5 minutes max
 };
 
 async function runWithLock(jobName: string, fn: () => Promise<void>): Promise<void> {
@@ -105,6 +105,7 @@ async function fullScrape(): Promise<void> {
   await runWithLock('Full Scrape', async () => {
     const b = await ensureBrowser();
     await runAllScrapers({ browser: b, concurrency: 3 });
+    await cleanupExpiredRaffles();
   });
 }
 
@@ -115,8 +116,8 @@ async function quickUpdate(): Promise<void> {
   });
 }
 
-async function dailyCleanup(): Promise<void> {
-  await runWithLock('Daily Cleanup', async () => {
+async function cleanup(): Promise<void> {
+  await runWithLock('Cleanup', async () => {
     await cleanupExpiredRaffles();
   });
 }
@@ -128,25 +129,19 @@ async function dailyCleanup(): Promise<void> {
 function startSchedule(): void {
   console.log('[Service] Setting up cron schedules...');
 
-  // Full scrape every 3 hours: 0 */3 * * *
+  // Full scrape every 3 hours — cleanup runs at the end of each full scrape
   cron.schedule('0 */3 * * *', () => {
     fullScrape();
   }, { timezone: 'Europe/London' });
 
-  // Quick update every 20 minutes: */20 * * * *
+  // Quick update every 20 minutes
   cron.schedule('*/20 * * * *', () => {
     quickUpdate();
   }, { timezone: 'Europe/London' });
 
-  // Daily cleanup at 3:00 AM: 0 3 * * *
-  cron.schedule('0 3 * * *', () => {
-    dailyCleanup();
-  }, { timezone: 'Europe/London' });
-
   console.log('[Service] Schedules active:');
-  console.log('  - Full scrape:   every 3 hours (concurrency 3, timeout 45m)');
+  console.log('  - Full scrape:   every 3 hours (concurrency 3, timeout 45m; cleanup runs after each)');
   console.log('  - Quick update:  every 20 minutes (concurrency 2, timeout 20m)');
-  console.log('  - Daily cleanup: 3:00 AM London time');
 }
 
 // ============================================
@@ -202,7 +197,11 @@ async function main(): Promise<void> {
   // Launch browser
   await ensureBrowser();
 
-  // Run initial full scrape on startup
+  // Clean up stale raffles immediately on startup, before waiting for the first full scrape
+  console.log('[Service] Running startup cleanup...');
+  await cleanup();
+
+  // Run initial full scrape on startup (cleanup will also run at the end of this)
   console.log('[Service] Running initial full scrape...');
   await fullScrape();
 
