@@ -71,6 +71,7 @@ Recurring procedures live in `.claude/skills/`. Use them; don't reinvent the ste
 - `write-scraper` — building/fixing a scraper.
 - `add-site` — onboarding a new raffle site end to end.
 - `write-content` — writing a site review or pillar guide.
+- `deploy-droplet` — deploy scraper changes to the DigitalOcean VM and verify startup.
 
 **Docs vs skills:** docs are *reference and reasoning* (what's true, why we chose it). Skills are *procedures* (when doing task X, follow these steps). Keep them separate; don't duplicate one into the other.
 
