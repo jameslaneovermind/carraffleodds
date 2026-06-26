@@ -50,10 +50,11 @@ function checkAggregateFailures(outcomes: ScraperOutcome[]): void {
   const failures = outcomes.filter(o => o.zeroResults || o.qualityFailure);
   if (failures.length >= 2) {
     Sentry.captureMessage(
-      `${failures.length} scrapers failed or have quality issues on this run`,
+      'Scraper aggregate failure: multiple scrapers failing',
       {
         level: 'error',
         extra: {
+          count: failures.length,
           failures: failures.map(f => ({ site: f.siteSlug, reason: f.qualityDetail })),
         },
       }

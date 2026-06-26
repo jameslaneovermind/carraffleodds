@@ -234,6 +234,9 @@ const PRIZE_TYPE_RULES: Record<Exclude<PrizeType, 'other'>, string[]> = {
     'bmw', 'audi', 'mercedes', 'ferrari', 'lamborghini', 'porsche', 'mclaren',
     'volkswagen', 'ford focus', 'ford fiesta', 'ford mustang', 'ford escort',
     'ford transit', 'ford ranger',
+    // Generic brand matches — catch all models (motorcycle check runs first, so BMW/Honda motos still classified correctly)
+    'toyota', 'mazda', 'mitsubishi', 'subaru', 'lexus',
+    'nissan', 'honda', 'hyundai', 'renault', 'kia ',
     'honda civic', 'honda type', 'toyota supra', 'toyota gr', 'nissan gtr', 'nissan gt-r', 'nissan skyline',
     'range rover', 'land rover', 'bentley', 'rolls royce', 'tesla',
     'volvo xc', 'volvo v', 'volvo s', 'vauxhall', 'mini cooper',
@@ -242,13 +245,19 @@ const PRIZE_TYPE_RULES: Record<Exclude<PrizeType, 'other'>, string[]> = {
     'suzuki jimny', 'suzuki swift',
     'transit connect', 'transporter', 'camper',
     'car giveaway', 'free car',
+    'golf gti', 'golf r ', 'mk7 golf', 'mk8 golf',
+    'hilux', 'scania', 'polaris rzr',
   ],
   motorcycle: [
     'ducati', 'kawasaki ninja', 'kawasaki z', 'yamaha r1', 'yamaha yzf', 'yamaha mt',
     'motorcycle', 'motorbike', 'panigale',
-    'honda cb', 'triumph street', 'triumph speed', 'triumph tiger',
+    'honda cb', 'honda crf',
+    'triumph street', 'triumph speed', 'triumph tiger',
     'fireblade', 'hayabusa',
     'sur ron', 'surron',
+    // Husqvarna moto models only — 'husqvarna' alone would match their robot mowers
+    'husqvarna tc', 'husqvarna fc', 'husqvarna te', 'husqvarna fe',
+    'gasgas', 'gas gas', 'ktm ', 'dirt bike',
     // BMW motorcycles — must be checked before generic 'bmw' car match
     'bmw r1250', 'bmw r 1250', 'bmw r1300', 'bmw r 1300',
     'bmw s1000', 'bmw s 1000', 'bmw g 310', 'bmw g310',
@@ -258,6 +267,8 @@ const PRIZE_TYPE_RULES: Record<Exclude<PrizeType, 'other'>, string[]> = {
   ],
   cash: [
     'tax free cash', 'win £',
+    // Broader cash patterns — order ensures car/moto titles never reach here
+    'cash', 'gift card', 'giftcard', 'egiftcard', 'voucher',
   ],
   watch: [
     'rolex', 'tag heuer', 'omega', 'breitling', 'cartier',
@@ -266,12 +277,14 @@ const PRIZE_TYPE_RULES: Record<Exclude<PrizeType, 'other'>, string[]> = {
   tech: [
     'iphone', 'macbook', 'ipad', 'samsung', 'playstation', 'ps5',
     'xbox', 'nintendo', 'switch', 'gaming', 'apple', 'pixel',
-    'laptop', 'tv ', 'smart tv', 'steam deck', 'alienware',
+    'laptop', 'tv ', 'smart tv', 'television', 'steam deck', 'alienware',
     'dyson', 'imac',
+    'dji', 'drone', 'robovac', 'robot vacuum',
   ],
   holiday: [
     'holiday', 'tui voucher', 'travel', 'getaway', 'spa break',
     'tickets to',
+    'city break', 'nights in ', 'night stay', 'summer escape', 'break for ',
   ],
   house: [
     'house', 'home package', 'property', 'apartment', 'flat',
