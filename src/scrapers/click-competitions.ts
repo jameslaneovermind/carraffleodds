@@ -19,6 +19,41 @@ import {
 import { parsePriceToPence, extractSlugFromUrl } from '../lib/utils';
 
 // ============================================
+// Exported parsing utilities
+// ============================================
+
+/**
+ * Derives the full competition page URL from the API's slugPrefix.
+ * ".prizes.CupraLeon010726"  → "https://…/prizes/CupraLeon010726"
+ * ".instawins.CarIW280626"   → "https://…/instawins/CarIW280626"
+ */
+export function deriveCompetitionUrl(slugPrefix: string, baseUrl: string): string {
+  const withoutLeadingDot = slugPrefix.replace(/^\./, '');
+  const path = withoutLeadingDot.replace('.', '/');
+  return `${baseUrl}/${path}`;
+}
+
+/**
+ * Parses "28/6/2026 - 2:00PM" → Date.
+ * Returns undefined for any format it doesn't recognise.
+ */
+export function parseAutoDrawDate(text: string): Date | undefined {
+  const m = text.match(
+    /(\d{1,2})\/(\d{1,2})\/(\d{4})\s*[-–]\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i
+  );
+  if (!m) return undefined;
+  const day = parseInt(m[1], 10);
+  const month = parseInt(m[2], 10) - 1; // 0-indexed
+  const year = parseInt(m[3], 10);
+  let hour = parseInt(m[4], 10);
+  const minute = parseInt(m[5], 10);
+  const ampm = m[6].toUpperCase();
+  if (ampm === 'PM' && hour < 12) hour += 12;
+  if (ampm === 'AM' && hour === 12) hour = 0;
+  return new Date(year, month, day, hour, minute, 0, 0);
+}
+
+// ============================================
 // Types
 // ============================================
 
