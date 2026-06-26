@@ -236,7 +236,7 @@ export async function persistScrapeResult(
     // Check if exists
     const { data: existing } = await supabase
       .from('raffles')
-      .select('id, status')
+      .select('id, status, end_date')
       .eq('site_id', site.id)
       .eq('external_id', raffle.externalId)
       .single();
@@ -245,9 +245,17 @@ export async function persistScrapeResult(
       // Never overwrite terminal statuses — a drawn/cancelled raffle stays that way
       // even if the scraper still sees it listed on the source site.
       const TERMINAL_STATUSES = ['drawn', 'cancelled'];
-      const updateRow = TERMINAL_STATUSES.includes(existing.status ?? '')
+      const updateRow: Record<string, unknown> = TERMINAL_STATUSES.includes(existing.status ?? '')
         ? Object.fromEntries(Object.entries(row).filter(([k]) => k !== 'status'))
-        : row;
+        : { ...row };
+
+      // If the stored end_date is already in the past, don't overwrite it with a
+      // year-advanced date. parseRelativeDate advances "Ends Mon 27 Feb" → Feb 2027
+      // when the draw already happened Feb 2026; we'd rather keep the correct past
+      // date so the cleanup job can handle it, than pin a fake future date.
+      if (existing.end_date && new Date(existing.end_date) < new Date() && updateRow.end_date) {
+        delete updateRow.end_date;
+      }
 
       const { error } = await supabase
         .from('raffles')
