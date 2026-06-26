@@ -304,10 +304,9 @@ export class LuckyDayCompetitionsScraper extends BaseScraper {
         // Reject stand-alone button links
         if (['Enter Now', 'Quick Buy', 'Read More'].includes(rawText)) return;
 
-        const imageUrl =
-          $a.find('img').first().attr('src') ||
-          $a.find('img').first().attr('data-src') ||
-          '';
+        const styleAttr = $a.find('.ending-img').attr('style') || '';
+        const bgMatch = styleAttr.match(/background-image:url\(([^)]+)\)/);
+        const imageUrl = bgMatch ? bgMatch[1] : '';
 
         const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
         const card = parseCardText(lines, href);
