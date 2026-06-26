@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { href: '/raffles/cash', label: 'Cash' },
   { href: '/raffles/tech', label: 'Tech' },
   { href: '/competitions', label: 'Skill Comps' },
+  { href: '/sites', label: 'Sites' },
 ];
 
 export function Header() {
