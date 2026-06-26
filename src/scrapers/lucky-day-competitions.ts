@@ -2,17 +2,15 @@
  * Lucky Day Competitions Scraper
  * Site: https://www.luckydaycompetitions.com
  *
- * WooCommerce site. Listing page at /all-competitions/ shows ALL competitions.
- * Cards have rich data: price, total tickets, remaining count, end dates.
- * Product URLs: /product/{slug}/
- * Images on www.luckydaycompetitions.com.
+ * WooCommerce SSR site. Static HTML is served immediately — no Playwright needed.
+ * Uses Node 18 native fetch + cheerio.
  *
- * Ticket data format: "Tickets remaining 98% 588/597"
- *   → remaining% = 98, remaining = 588, total = 597
- *   → percentSold = 100 - 98 = 2
+ * Ticket data format on listing cards: "Tickets remaining 98% 588/597"
+ *   → ticketsRemaining = 588, totalTickets = 597, percentSold = 100 - 98 = 2
  */
 
-import { BrowserContext, Page } from 'playwright';
+import * as cheerio from 'cheerio';
+import { BrowserContext } from 'playwright';
 import {
   BaseScraper,
   ScrapedRaffle,
@@ -25,14 +23,14 @@ import { parsePriceToPence, extractSlugFromUrl } from '../lib/utils';
 // Types
 // ============================================
 
-interface ListingCard {
+export interface ListingCard {
   title: string;
   url: string;
   imageUrl?: string;
-  ticketPrice?: number;     // pence
+  ticketPrice?: number;      // pence
   totalTickets?: number;
   ticketsRemaining?: number;
-  percentSold?: number;     // 0-100
+  percentSold?: number;      // 0–100
   endDateText?: string;
 }
 
@@ -40,9 +38,138 @@ interface ListingCard {
 // Skip patterns
 // ============================================
 
-const SKIP_TITLE_PATTERNS = [
-  /gift voucher/i,
+const SKIP_TITLE_PATTERNS = [/gift voucher/i];
+
+const SKIP_LINE_PATTERNS = [
+  /^£[\d.]+$/,
+  /tickets remaining/i,
+  /^\d+%/,
+  /^\d+\/\d+/,
+  /^quick buy$/i,
+  /^enter now$/i,
+  /^read more$/i,
+  /^ends\s/i,
+  /^every ticket wins$/i,
+  /^win for free!$/i,
+  /^less than \d+% left$/i,
+  /^just launched$/i,
+  /^😮/,
+  /^😲/,
+  /^⏱️/,
 ];
+
+// ============================================
+// Pure parsing helpers (exported for unit tests)
+// ============================================
+
+/**
+ * Parse text lines from a WooCommerce listing card into structured data.
+ * Returns null if the card is unusable (no title, etc.).
+ */
+export function parseCardText(lines: string[], url: string): ListingCard | null {
+  if (lines.length === 0) return null;
+
+  // Price: first line matching "£N.NN"
+  let ticketPrice: number | undefined;
+  const priceLine = lines.find(l => /^£[\d.]+$/.test(l));
+  if (priceLine) ticketPrice = parsePriceToPence(priceLine) ?? undefined;
+
+  // Tickets: "Tickets remaining 98% 588/597" or "588/597"
+  let totalTickets: number | undefined;
+  let ticketsRemaining: number | undefined;
+  let percentSold: number | undefined;
+
+  const ticketLine = lines.find(l => /\d+\/\d+/.test(l));
+  if (ticketLine) {
+    const m = ticketLine.match(/(\d+)\s*\/\s*(\d+)/);
+    if (m) {
+      ticketsRemaining = parseInt(m[1], 10);
+      totalTickets = parseInt(m[2], 10);
+      const sold = totalTickets - ticketsRemaining;
+      percentSold = totalTickets > 0 ? Math.round((sold / totalTickets) * 100) : 0;
+    }
+  }
+
+  if (percentSold === undefined) {
+    const remLine = lines.find(l => /tickets remaining\s+\d+%/i.test(l));
+    if (remLine) {
+      const m = remLine.match(/(\d+)%/);
+      if (m) percentSold = 100 - parseInt(m[1], 10);
+    }
+  }
+
+  // End date: "Ends Tue 10th Feb"
+  let endDateText: string | undefined;
+  const endLine = lines.find(l => /^ends\s/i.test(l));
+  if (endLine) endDateText = endLine;
+
+  // Title: first non-skip line with enough substance
+  const titleCandidates = lines.filter(l =>
+    !SKIP_LINE_PATTERNS.some(p => p.test(l)) && l.length > 3
+  );
+  const title = titleCandidates[0] || '';
+  if (!title) return null;
+
+  return { title, url, ticketPrice, totalTickets, ticketsRemaining, percentSold, endDateText };
+}
+
+/**
+ * Parse relative end-date text.
+ * "Ends Tue 10th Feb" → Date at 21:00 that day (advances year if date is past).
+ */
+export function parseRelativeDate(text?: string): Date | undefined {
+  if (!text) return undefined;
+
+  const m = text.match(
+    /(?:mon|tue|wed|thu|fri|sat|sun)\w*\s+(\d{1,2})(?:st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*/i
+  );
+  if (!m) return undefined;
+
+  const day = parseInt(m[1], 10);
+  const monthMap: Record<string, number> = {
+    jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
+    jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
+  };
+  const month = monthMap[m[2].toLowerCase()];
+  if (month === undefined) return undefined;
+
+  const now = new Date();
+  let year = now.getFullYear();
+  const candidate = new Date(year, month, day, 21, 0, 0, 0);
+  if (candidate < now) year++;
+
+  return new Date(year, month, day, 21, 0, 0, 0);
+}
+
+// ============================================
+// HTTP helper
+// ============================================
+
+const FETCH_TIMEOUT_MS = 30_000;
+const DELAY_MS = 800;
+const MAX_PAGES = 10;
+
+async function fetchHtml(url: string): Promise<string> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; CarRaffleOdds-Bot/1.0; +https://carraffleodds.com)',
+        Accept: 'text/html,application/xhtml+xml',
+      },
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
+    return res.text();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(r => setTimeout(r, ms));
+}
 
 // ============================================
 // Scraper
@@ -55,9 +182,6 @@ export class LuckyDayCompetitionsScraper extends BaseScraper {
 
   private listingUrl = 'https://www.luckydaycompetitions.com/all-competitions/';
 
-  private static readonly DETAIL_PAGE_TIMEOUT_MS = 45_000;
-
-  /** Keywords that indicate a high-value prize worth visiting the detail page for */
   private static readonly HIGH_VALUE_KEYWORDS = [
     'bmw', 'audi', 'mercedes', 'ferrari', 'lamborghini', 'porsche', 'mclaren',
     'volkswagen', 'vw ', 'ford', 'honda', 'toyota', 'nissan',
@@ -75,368 +199,192 @@ export class LuckyDayCompetitionsScraper extends BaseScraper {
 
   private needsDetailPage(title: string): boolean {
     const lower = title.toLowerCase();
-    return LuckyDayCompetitionsScraper.HIGH_VALUE_KEYWORDS.some((kw) => lower.includes(kw));
+    return LuckyDayCompetitionsScraper.HIGH_VALUE_KEYWORDS.some(kw => lower.includes(kw));
   }
 
   // ==========================================
-  // Full Scrape
+  // Public interface (context param kept for BaseScraper compatibility)
   // ==========================================
 
-  async scrape(context: BrowserContext): Promise<ScraperResult> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async scrape(_context: BrowserContext): Promise<ScraperResult> {
     const start = Date.now();
     const errors: string[] = [];
     const raffles: ScrapedRaffle[] = [];
 
     try {
-      const cards = await this.scrapeListingPage(context);
-      console.log(`[${this.name}] Found ${cards.length} competition cards`);
+      const cards = await this.scrapeListingPages(errors);
+      console.log(`[${this.name}] Found ${cards.length} cards`);
 
-      // Listing page has rich data (price, total tickets, % sold, end dates).
-      // Only visit detail pages for high-value items (to get cash alternative).
-      const detailCards = cards.filter((c) => this.needsDetailPage(c.title));
-      const listingOnlyCards = cards.filter((c) => !this.needsDetailPage(c.title));
+      const detailCards = cards.filter(c => this.needsDetailPage(c.title));
+      const listingOnlyCards = cards.filter(c => !this.needsDetailPage(c.title));
 
-      console.log(
-        `[${this.name}] ${detailCards.length} high-value (detail page), ${listingOnlyCards.length} others (listing only)`
-      );
+      console.log(`[${this.name}] ${detailCards.length} high-value (detail), ${listingOnlyCards.length} listing-only`);
 
-      // Non-high-value: use listing card data directly
       for (const card of listingOnlyCards) {
-        const raffle = this.buildRaffleFromCard(card);
-        if (raffle) raffles.push(raffle);
+        const r = this.buildRaffleFromCard(card);
+        if (r) raffles.push(r);
       }
 
-      // High-value: visit detail pages for cash alternative
       for (let i = 0; i < detailCards.length; i++) {
         const card = detailCards[i];
         const slug = extractSlugFromUrl(card.url);
         console.log(`[${this.name}] [${i + 1}/${detailCards.length}] Detail: ${slug}`);
 
-        try {
-          const raffle = await Promise.race([
-            this.scrapeDetailPage(context, card),
-            new Promise<null>((_, reject) =>
-              setTimeout(
-                () => reject(new Error('Detail page timed out')),
-                LuckyDayCompetitionsScraper.DETAIL_PAGE_TIMEOUT_MS,
-              ),
-            ),
-          ]);
-          if (raffle) raffles.push(raffle);
-        } catch (err) {
+        const r = await this.scrapeDetailPage(card).catch(err => {
           const msg = err instanceof Error ? err.message : String(err);
-          console.warn(`[${this.name}] Error on ${slug}: ${msg}`);
           errors.push(`${slug}: ${msg}`);
+          return this.buildRaffleFromCard(card);
+        });
+        if (r) raffles.push(r);
 
-          // Fallback from listing data (already very rich)
-          const fallback = this.buildRaffleFromCard(card);
-          if (fallback) raffles.push(fallback);
-        }
-
-        await this.delay(800);
+        await sleep(DELAY_MS);
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       errors.push(`Fatal: ${msg}`);
-      console.error(`[${this.name}] Fatal error: ${msg}`);
+      console.error(`[${this.name}] Fatal: ${msg}`);
     }
 
-    return {
-      siteName: this.name,
-      siteSlug: this.siteSlug,
-      raffles,
-      errors,
-      duration: Date.now() - start,
-    };
+    return { siteName: this.name, siteSlug: this.siteSlug, raffles, errors, duration: Date.now() - start };
   }
 
-  // ==========================================
-  // Quick Update
-  // ==========================================
-
-  async quickUpdate(context: BrowserContext): Promise<QuickUpdateResult> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async quickUpdate(_context: BrowserContext): Promise<QuickUpdateResult> {
     const start = Date.now();
     const errors: string[] = [];
     const updates: QuickUpdateResult['updates'] = [];
 
     try {
-      const cards = await this.scrapeListingPage(context);
-
+      const cards = await this.scrapeListingPages(errors);
       for (const card of cards) {
         const externalId = extractSlugFromUrl(card.url);
         if (!externalId) continue;
-
-        updates.push({
-          externalId,
-          percentSold: card.percentSold,
-          ticketPrice: card.ticketPrice,
-        });
+        updates.push({ externalId, percentSold: card.percentSold, ticketPrice: card.ticketPrice });
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      errors.push(msg);
+      errors.push(err instanceof Error ? err.message : String(err));
     }
 
-    return {
-      siteName: this.name,
-      siteSlug: this.siteSlug,
-      updates,
-      errors,
-      duration: Date.now() - start,
-    };
+    return { siteName: this.name, siteSlug: this.siteSlug, updates, errors, duration: Date.now() - start };
   }
 
   // ==========================================
-  // Listing Page
+  // Listing pages (paginated)
   // ==========================================
 
-  private async scrapeListingPage(context: BrowserContext): Promise<ListingCard[]> {
-    const page = await context.newPage();
+  private async scrapeListingPages(errors: string[]): Promise<ListingCard[]> {
+    const all: ListingCard[] = [];
+    let url: string | null = this.listingUrl;
+    let pageNum = 0;
 
-    try {
-      const ok = await this.navigateWithRetry(page, this.listingUrl);
-      if (!ok) throw new Error(`Failed to load listing page: ${this.listingUrl}`);
+    while (url && pageNum < MAX_PAGES) {
+      pageNum++;
+      let html: string;
+      try {
+        html = await fetchHtml(url);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        errors.push(`Listing page ${pageNum} fetch failed: ${msg}`);
+        break;
+      }
 
-      // Wait for product cards
-      await page.waitForSelector('a[href*="/product/"]', { timeout: 15000 }).catch(() => {});
+      const $ = cheerio.load(html);
+      const seen = new Set<string>();
 
-      // Scroll to load all
-      await this.scrollToLoadAll(page);
+      $('li a[href*="/product/"]').each((_, el) => {
+        const $a = $(el);
+        const href = $a.attr('href');
+        if (!href || seen.has(href)) return;
+        seen.add(href);
 
-      // Extract raw link data from page
-      const rawCards = await page.evaluate(() => {
-        const results: Array<{
-          url: string;
-          text: string;
-          imageUrl: string;
-        }> = [];
+        const rawText = $a.text().trim();
+        if (!rawText) return;
 
-        const seen = new Set<string>();
-        const links = document.querySelectorAll('li a[href*="/product/"]');
+        // Reject stand-alone button links
+        if (['Enter Now', 'Quick Buy', 'Read More'].includes(rawText)) return;
 
-        links.forEach((el) => {
-          const a = el as HTMLAnchorElement;
-          const href = a.href;
+        const imageUrl =
+          $a.find('img').first().attr('src') ||
+          $a.find('img').first().attr('data-src') ||
+          '';
 
-          if (seen.has(href)) return;
-          seen.add(href);
+        const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
+        const card = parseCardText(lines, href);
+        if (!card) return;
+        if (SKIP_TITLE_PATTERNS.some(p => p.test(card.title))) return;
+        if (card.ticketPrice === undefined || card.ticketPrice <= 0) return;
 
-          // Skip "Enter Now" / "Quick Buy" standalone buttons
-          const text = (a.innerText || '').trim();
-          if (!text || text === 'Enter Now' || text === 'Quick Buy' || text === 'Read More') return;
-
-          const img = a.querySelector('img') as HTMLImageElement | null;
-
-          results.push({
-            url: href,
-            text,
-            imageUrl: img ? img.src : '',
-          });
-        });
-
-        return results;
+        all.push({ ...card, imageUrl: imageUrl || undefined });
       });
 
-      return rawCards
-        .map(c => this.parseListingCard(c))
-        .filter((c): c is ListingCard => !!c && !!c.title)
-        .filter(c => !SKIP_TITLE_PATTERNS.some(p => p.test(c.title)))
-        .filter(c => c.ticketPrice !== undefined && c.ticketPrice > 0); // Skip free entries
-    } finally {
-      await page.close();
+      // Follow WooCommerce pagination
+      const nextHref = $('a.next.page-numbers').attr('href') || null;
+      url = nextHref;
+      if (url) await sleep(DELAY_MS);
     }
+
+    return all;
   }
 
-  private parseListingCard(raw: {
-    url: string;
-    text: string;
-    imageUrl: string;
-  }): ListingCard | null {
-    const lines = raw.text.split('\n').map(l => l.trim()).filter(Boolean);
-    if (lines.length === 0) return null;
+  // ==========================================
+  // Detail page (high-value raffles only)
+  // ==========================================
 
-    // Price: "£1.97" or "£0.97" — first line starting with £
-    let ticketPrice: number | undefined;
-    const priceLine = lines.find(l => /^£[\d.]+$/.test(l));
-    if (priceLine) {
-      ticketPrice = parsePriceToPence(priceLine) ?? undefined;
-    }
+  private async scrapeDetailPage(card: ListingCard): Promise<ScrapedRaffle | null> {
+    const html = await fetchHtml(card.url);
+    const $ = cheerio.load(html);
+    const body = $.text();
 
-    // Tickets remaining: "Tickets remaining 98% 588/597" or just "98% 588/597"
-    let totalTickets: number | undefined;
-    let ticketsRemaining: number | undefined;
-    let percentSold: number | undefined;
+    const cashMatch = body.match(/cash\s*alternative[:\s]*£([\d,]+)/i);
+    const cashAlternative = cashMatch
+      ? (parsePriceToPence('£' + cashMatch[1]) ?? undefined)
+      : undefined;
 
-    // Look for the "XXX/XXX" pattern (remaining/total)
-    const ticketLine = lines.find(l => /\d+\/\d+/.test(l));
-    if (ticketLine) {
-      const ratioMatch = ticketLine.match(/(\d+)\s*\/\s*(\d+)/);
-      if (ratioMatch) {
-        ticketsRemaining = parseInt(ratioMatch[1], 10);
-        totalTickets = parseInt(ratioMatch[2], 10);
-        const ticketsSold = totalTickets - ticketsRemaining;
-        percentSold = totalTickets > 0 ? Math.round((ticketsSold / totalTickets) * 100) : 0;
-      }
-    }
+    const prizeMatch = body.match(/(?:prize|rrp|value)[:\s]*£([\d,]+)/i);
+    const prizeValue = prizeMatch
+      ? (parsePriceToPence('£' + prizeMatch[1]) ?? undefined)
+      : undefined;
 
-    // If we didn't get percent from ratio, try the "Tickets remaining XX%" text
-    if (percentSold === undefined) {
-      const remainingLine = lines.find(l => /tickets remaining\s+\d+%/i.test(l));
-      if (remainingLine) {
-        const pctMatch = remainingLine.match(/(\d+)%/);
-        if (pctMatch) {
-          const remainingPct = parseInt(pctMatch[1], 10);
-          percentSold = 100 - remainingPct;
-        }
-      }
-    }
+    const galleryImg = $('.woocommerce-product-gallery img, .product-image img, img.wp-post-image').first();
+    const imageUrl = galleryImg.attr('src') || galleryImg.attr('data-src') || card.imageUrl;
 
-    // End date: "Ends Tue 10th Feb" or "Ends Sun 1st Mar"
-    let endDateText: string | undefined;
-    const endLine = lines.find(l => /^ends\s/i.test(l));
-    if (endLine) endDateText = endLine;
+    const ticketMatch = body.match(/(?:max|total)\s*(?:entries|tickets)[:\s]*([\d,]+)/i);
+    const totalTickets = card.totalTickets
+      || (ticketMatch ? parseInt(ticketMatch[1].replace(/,/g, ''), 10) : undefined);
 
-    // Title: extract from the URL slug since the card text is messy
-    // Actually, better to find the title from the text — it's usually the last substantive line
-    // that isn't price, tickets, buttons, etc.
-    const skipLinePatterns = [
-      /^£[\d.]+$/,
-      /tickets remaining/i,
-      /^\d+%/,
-      /^\d+\/\d+/,
-      /^quick buy$/i,
-      /^enter now$/i,
-      /^read more$/i,
-      /^ends\s/i,
-      /^every ticket wins$/i,
-      /^win for free!$/i,
-      /^less than \d+% left$/i,
-      /^just launched$/i,
-      /^😮/,
-      /^😲/,
-      /^⏱️/,
-    ];
+    const externalId = extractSlugFromUrl(card.url);
+    if (!externalId) return null;
 
-    // Title: first line that isn't a skip pattern and has enough substance
-    const titleCandidates = lines.filter(l =>
-      !skipLinePatterns.some(p => p.test(l)) && l.length > 3
-    );
-
-    // The title is typically at the very start or is the first meaningful line
-    const title = titleCandidates[0] || '';
-
-    if (!title) return null;
+    const ticketsSold = totalTickets !== undefined && card.ticketsRemaining !== undefined
+      ? totalTickets - card.ticketsRemaining
+      : undefined;
 
     return {
-      title,
-      url: raw.url,
-      imageUrl: raw.imageUrl || undefined,
-      ticketPrice,
+      externalId,
+      title: this.sanitizeTitle(card.title, card.url),
+      sourceUrl: card.url,
+      imageUrl,
+      ticketPrice: card.ticketPrice,
       totalTickets,
-      ticketsRemaining,
-      percentSold,
-      endDateText,
+      ticketsSold,
+      percentSold: card.percentSold,
+      cashAlternative,
+      prizeValue,
+      endDate: parseRelativeDate(card.endDateText),
+      drawType: 'live_draw',
     };
   }
 
   // ==========================================
-  // Detail Page
-  // ==========================================
-
-  private async scrapeDetailPage(
-    context: BrowserContext,
-    card: ListingCard,
-  ): Promise<ScrapedRaffle | null> {
-    const page = await context.newPage();
-
-    try {
-      const ok = await this.navigateWithRetry(page, card.url);
-      if (!ok) return this.buildRaffleFromCard(card);
-
-      await page.waitForSelector('h1, .product_title', { timeout: 10000 }).catch(() => {});
-
-      const pageData = await page.evaluate(() => {
-        const body = document.body.innerText;
-
-        // Title
-        const h1 = document.querySelector('h1, .product_title');
-        const title = h1 ? (h1.textContent || '').trim() : '';
-
-        // Cash alternative
-        const cashMatch = body.match(/cash\s*alternative[:\s]*£([\d,]+)/i);
-        const cashAltStr = cashMatch ? '£' + cashMatch[1] : null;
-
-        // Prize value
-        const prizeMatch = body.match(/(?:prize|rrp|value)[:\s]*£([\d,]+)/i);
-        const prizeStr = prizeMatch ? '£' + prizeMatch[1] : null;
-
-        // Image
-        const mainImg = document.querySelector('.woocommerce-product-gallery img, .product-image img, img.wp-post-image') as HTMLImageElement | null;
-        const imageUrl = mainImg?.src || null;
-
-        // Total tickets from detail (backup)
-        const ticketMatch = body.match(/(?:max|total)\s*(?:entries|tickets)[:\s]*([\d,]+)/i);
-        const totalTicketsStr = ticketMatch ? ticketMatch[1] : null;
-
-        return {
-          title,
-          cashAltStr,
-          prizeStr,
-          imageUrl,
-          totalTicketsStr,
-        };
-      });
-
-      const externalId = extractSlugFromUrl(card.url);
-      if (!externalId) return null;
-
-      // Cash alternative
-      const cashAlternative = pageData.cashAltStr
-        ? parsePriceToPence(pageData.cashAltStr) ?? undefined
-        : undefined;
-
-      // Prize value
-      const prizeValue = pageData.prizeStr
-        ? parsePriceToPence(pageData.prizeStr) ?? undefined
-        : undefined;
-
-      const totalTickets = card.totalTickets
-        || (pageData.totalTicketsStr
-          ? parseInt(pageData.totalTicketsStr.replace(/[^0-9]/g, ''), 10)
-          : undefined);
-
-      const ticketsSold = totalTickets && card.ticketsRemaining !== undefined
-        ? totalTickets - card.ticketsRemaining
-        : undefined;
-
-      return {
-        externalId,
-        title: this.sanitizeTitle(pageData.title || card.title, card.url),
-        sourceUrl: card.url,
-        imageUrl: pageData.imageUrl || card.imageUrl,
-        ticketPrice: card.ticketPrice,
-        totalTickets,
-        ticketsSold,
-        percentSold: card.percentSold,
-        cashAlternative,
-        prizeValue,
-        endDate: this.parseRelativeDate(card.endDateText),
-        drawType: 'live_draw',
-      };
-    } finally {
-      await page.close();
-    }
-  }
-
-  // ==========================================
-  // Fallback
+  // Fallback builder (listing data only)
   // ==========================================
 
   private buildRaffleFromCard(card: ListingCard): ScrapedRaffle | null {
     const externalId = extractSlugFromUrl(card.url);
     if (!externalId) return null;
 
-    const ticketsSold = card.totalTickets && card.ticketsRemaining !== undefined
+    const ticketsSold = card.totalTickets !== undefined && card.ticketsRemaining !== undefined
       ? card.totalTickets - card.ticketsRemaining
       : undefined;
 
@@ -449,56 +397,8 @@ export class LuckyDayCompetitionsScraper extends BaseScraper {
       totalTickets: card.totalTickets,
       ticketsSold,
       percentSold: card.percentSold,
-      endDate: this.parseRelativeDate(card.endDateText),
+      endDate: parseRelativeDate(card.endDateText),
       drawType: 'live_draw',
     };
-  }
-
-  // ==========================================
-  // Helpers
-  // ==========================================
-
-  /**
-   * Parse relative end date.
-   * "Ends Tue 10th Feb" → Date
-   * "Ends Sun 1st Mar" → Date
-   */
-  private parseRelativeDate(text?: string): Date | undefined {
-    if (!text) return undefined;
-
-    const match = text.match(
-      /(?:mon|tue|wed|thu|fri|sat|sun)\w*\s+(\d{1,2})(?:st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*/i
-    );
-
-    if (!match) return undefined;
-
-    const day = parseInt(match[1], 10);
-    const monthAbbr = match[2].toLowerCase();
-    const monthMap: Record<string, number> = {
-      jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
-      jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
-    };
-    const month = monthMap[monthAbbr];
-    if (month === undefined) return undefined;
-
-    const now = new Date();
-    let year = now.getFullYear();
-    const candidate = new Date(year, month, day, 21, 0, 0, 0);
-    if (candidate < now) year++;
-
-    return new Date(year, month, day, 21, 0, 0, 0);
-  }
-
-  /** Scroll to load lazy content */
-  private async scrollToLoadAll(page: Page): Promise<void> {
-    let previousHeight = 0;
-    for (let i = 0; i < 15; i++) {
-      const currentHeight = await page.evaluate(() => document.body.scrollHeight);
-      if (currentHeight === previousHeight) break;
-      previousHeight = currentHeight;
-      await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-      await this.delay(600);
-    }
-    await page.evaluate(() => window.scrollTo(0, 0));
   }
 }

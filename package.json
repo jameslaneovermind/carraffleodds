@@ -15,7 +15,8 @@
     "investigate": "tsx scripts/investigate-dcg.ts",
     "test:scraper": "tsx scripts/validate-scraper.ts",
     "test:7days": "tsx scripts/test-7days.ts",
-    "test:dcg": "tsx scripts/test-scraper.ts"
+    "test:dcg": "tsx scripts/test-scraper.ts",
+    "test": "vitest run"
   },
   "dependencies": {
     "@radix-ui/react-dropdown-menu": "^2.1.16",
@@ -24,6 +25,7 @@
     "@radix-ui/react-slot": "^1.2.4",
     "@supabase/supabase-js": "^2.78.0",
     "@vercel/analytics": "^2.0.1",
+    "cheerio": "^1.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^17.2.4",
@@ -50,6 +52,7 @@
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.6"
   }
 }
