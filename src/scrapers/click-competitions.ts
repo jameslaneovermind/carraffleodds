@@ -240,11 +240,14 @@ export class ClickCompetitionsScraper extends BaseScraper {
         this.cookiesDismissed = true;
       }
 
-      const pageData = await page.evaluate(() => {
-        // Title
-        const h1 = document.querySelector('h1');
-        const title = h1 ? (h1.textContent || '').trim() : '';
+      // Cheap title-only extract — bail out early before the full extraction
+      const titleText = await page.evaluate(() =>
+        (document.querySelector('h1')?.textContent || '').trim()
+      );
 
+      if (!titleText || SKIP_TITLE_PATTERNS.some(p => p.test(titleText))) return null;
+
+      const pageData = await page.evaluate(() => {
         // Image — og:image is most reliable; fall back to first skywind/prismic img
         const ogImage = document.querySelector('meta[property="og:image"]') as HTMLMetaElement | null;
         let imageUrl: string | null = ogImage?.content || null;
@@ -271,16 +274,8 @@ export class ClickCompetitionsScraper extends BaseScraper {
         const isLive = /live\s*draw/i.test(bodyText);
         const drawType = isLive ? 'live_draw' : 'auto_draw';
 
-        return { title, imageUrl, drawDateStr, cashAltStr, drawType };
+        return { imageUrl, drawDateStr, cashAltStr, drawType };
       });
-
-      if (!pageData.title) return null;
-
-      // Filter out credit/non-car competitions as early as possible (before any
-      // further processing) to avoid wasting time on title/image/date extraction.
-      // TODO: move to slug-based pre-filter once API slugPrefix patterns are confirmed
-      // (e.g., if credit competitions have a recognisable slugPrefix like ".credits.XYZ").
-      if (SKIP_TITLE_PATTERNS.some(p => p.test(pageData.title))) return null;
 
       const cashAlternative = pageData.cashAltStr
         ? parseInt(pageData.cashAltStr.replace(/,/g, ''), 10) * 100
@@ -295,7 +290,7 @@ export class ClickCompetitionsScraper extends BaseScraper {
         // On first deploy, the old slug-keyed rows must be cleared before running
         // this scraper — see docs/deploy/click-competitions-uuid-migration.md.
         externalId: comp.id,
-        title: this.sanitizeTitle(pageData.title, sourceUrl),
+        title: this.sanitizeTitle(titleText, sourceUrl),
         sourceUrl,
         imageUrl: pageData.imageUrl ?? undefined,
         ticketPrice: Math.round(comp.ticketAmount * 100),
