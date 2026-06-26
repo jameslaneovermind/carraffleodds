@@ -141,3 +141,46 @@ export function FaqJsonLd({
     />
   );
 }
+
+/**
+ * Review schema — for /sites/[slug] operator review pages.
+ * itemReviewed = the operator site; reviewRating = Trustpilot score (attributed clearly).
+ */
+export function ReviewJsonLd({
+  siteName,
+  siteUrl,
+  trustpilotScore,
+  reviewUrl,
+}: {
+  siteName: string;
+  siteUrl: string;
+  trustpilotScore: number;
+  reviewUrl: string;
+}) {
+  return (
+    <JsonLd
+      data={{
+        '@context': 'https://schema.org',
+        '@type': 'Review',
+        itemReviewed: {
+          '@type': 'Organization',
+          name: siteName,
+          url: siteUrl,
+        },
+        reviewRating: {
+          '@type': 'Rating',
+          ratingValue: trustpilotScore,
+          bestRating: 5,
+          worstRating: 1,
+          description: 'Trustpilot community rating — not an editorial score from CarRaffleOdds',
+        },
+        author: {
+          '@type': 'Organization',
+          name: 'CarRaffleOdds',
+          url: SITE_URL,
+        },
+        url: reviewUrl,
+      }}
+    />
+  );
+}
