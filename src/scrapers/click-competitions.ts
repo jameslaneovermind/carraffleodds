@@ -2,11 +2,10 @@
  * Click Competitions Scraper
  * Site: https://www.clickcompetitions.co.uk
  *
- * WordPress/WooCommerce site using Zap Competitions platform.
- * Listing page at /competitions/ is paginated.
- * Cards contain price, % sold, cash alternative, draw date text.
- * Detail pages contain total tickets and exact draw dates.
- * Images hosted on www.clickcompetitions.co.uk.
+ * Site migrated from WordPress/WooCommerce to a Next.js SPA.
+ * Listing from REST JSON API at /be/content/api/competitions/active.
+ * Detail ticket counts from /be/content/api/competitions/{uuid}.
+ * Playwright used only for title, image, end date, cash alternative per competition page.
  */
 
 import { BrowserContext, Page } from 'playwright';
@@ -73,7 +72,7 @@ interface ApiCompetition {
   visability: {
     percentage?: number;
   };
-  global_maximum_tickets_quantity: number;
+  // global_maximum_tickets_quantity: number; // per-user cap — NOT the real competition total; use detail API visability.totalTickets
 }
 
 interface ApiCompetitionDetail {
@@ -277,7 +276,10 @@ export class ClickCompetitionsScraper extends BaseScraper {
 
       if (!pageData.title) return null;
 
-      // Filter out credit/non-car competitions
+      // Filter out credit/non-car competitions as early as possible (before any
+      // further processing) to avoid wasting time on title/image/date extraction.
+      // TODO: move to slug-based pre-filter once API slugPrefix patterns are confirmed
+      // (e.g., if credit competitions have a recognisable slugPrefix like ".credits.XYZ").
       if (SKIP_TITLE_PATTERNS.some(p => p.test(pageData.title))) return null;
 
       const cashAlternative = pageData.cashAltStr
@@ -289,6 +291,9 @@ export class ClickCompetitionsScraper extends BaseScraper {
         : undefined;
 
       return {
+        // externalId uses the UUID from the API id field (not the old URL slug).
+        // On first deploy, the old slug-keyed rows must be cleared before running
+        // this scraper — see docs/deploy/click-competitions-uuid-migration.md.
         externalId: comp.id,
         title: this.sanitizeTitle(pageData.title, sourceUrl),
         sourceUrl,
