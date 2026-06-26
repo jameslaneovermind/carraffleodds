@@ -43,17 +43,18 @@ Always merge to main before deploying. The droplet pulls from main.
 ssh root@46.101.53.17 "cd /opt/carraffleodds && git fetch && git log --oneline -3 origin/main"
 ```
 
-**Step 2: Pull and install**
+**Step 2: Stop, pull, install**
 ```bash
-ssh root@46.101.53.17 "cd /opt/carraffleodds && git pull && npm install"
+ssh root@46.101.53.17 "cd /opt/carraffleodds && pm2 stop scraper && git pull && npm install"
 ```
-Always use plain `npm install` — never `--omit=dev` or `--omit=optional`. The
-esbuild Linux binary is an optional dependency and will be dropped otherwise,
-crashing the service on startup.
+Always `pm2 stop` BEFORE `npm install` — installing while the process is running causes
+ETXTBSY errors (binary in use). Use plain `npm install`, never `--omit=dev` or
+`--omit=optional`; the esbuild Linux binary is an optional dep and will be dropped
+otherwise, crashing the service on startup.
 
-**Step 3: Restart**
+**Step 3: Start**
 ```bash
-ssh root@46.101.53.17 "pm2 restart scraper"
+ssh root@46.101.53.17 "pm2 start scraper"
 ```
 
 **Step 4: Verify startup**
