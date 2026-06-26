@@ -140,7 +140,11 @@ async function fetchDbRaffles(
     .eq('site_id', site.id)
     .in('status', ['active', 'ending_soon']);
 
-  return (data ?? []) as DbRaffle[];
+  const rows = (data ?? []) as DbRaffle[];
+  if (rows.length === 1000) {
+    console.warn(`[audit] fetchDbRaffles: result capped at 1000 rows for ${siteSlug} — results may be incomplete`);
+  }
+  return rows;
 }
 
 // ── Diff logic ────────────────────────────────────────────────────────────────
@@ -225,3 +229,159 @@ function diffRaffles(
   };
 }
 
+// ── Terminal output ───────────────────────────────────────────────────────────
+
+function printSiteResult(result: SiteAuditResult): void {
+  const bar = '━'.repeat(52);
+  console.log(`\n${bar}`);
+  console.log(`  ${result.name}`);
+  console.log(bar);
+
+  if (result.error) {
+    console.log(`  ✗ ERROR: ${result.error}`);
+    return;
+  }
+
+  console.log(`  Live: ${result.liveCount}  |  DB active: ${result.dbCount}  |  Matched: ${result.matchedCount}`);
+
+  if (result.staleInDb.length > 0) {
+    console.log(`\n  ⚠  Stale in DB (not on live site): ${result.staleInDb.length}`);
+    result.staleInDb.slice(0, 3).forEach(r => console.log(`       → "${r.title}" [${r.externalId}]`));
+    if (result.staleInDb.length > 3) console.log(`       (+ ${result.staleInDb.length - 3} more)`);
+  }
+
+  if (result.missingFromDb.length > 0) {
+    console.log(`\n  ⚠  Missing from DB (live but not scraped): ${result.missingFromDb.length}`);
+    result.missingFromDb.slice(0, 3).forEach(r => console.log(`       → "${r.title}"`));
+    if (result.missingFromDb.length > 3) console.log(`       (+ ${result.missingFromDb.length - 3} more)`);
+  }
+
+  if (result.missingImages.length > 0) {
+    console.log(`\n  ✗  Missing images: ${result.missingImages.length}/${result.matchedCount} matched`);
+  }
+
+  if (result.priceMismatches.length > 0) {
+    console.log(`\n  ✗  Price mismatches (>10%): ${result.priceMismatches.length}`);
+    result.priceMismatches.forEach(r =>
+      console.log(`       → "${r.title}"  live: £${(r.livePrice / 100).toFixed(2)}  db: £${(r.dbPrice / 100).toFixed(2)}`)
+    );
+  }
+
+  if (result.endDateMismatches.length > 0) {
+    console.log(`\n  ✗  End date mismatches (>24h): ${result.endDateMismatches.length}`);
+    result.endDateMismatches.slice(0, 3).forEach(r => console.log(`       → "${r.title}"`));
+    if (result.endDateMismatches.length > 3) console.log(`       (+ ${result.endDateMismatches.length - 3} more)`);
+  }
+
+  const clean = !result.staleInDb.length && !result.missingFromDb.length &&
+    !result.missingImages.length && !result.priceMismatches.length && !result.endDateMismatches.length;
+  if (clean) console.log(`  ✓  No issues found`);
+}
+
+function printSummary(results: SiteAuditResult[], outputPath: string): void {
+  const bar = '━'.repeat(52);
+  const ok = results.filter(r => !r.error);
+  const matchedTotal = ok.reduce((s, r) => s + r.matchedCount, 0);
+  const missingImages = ok.reduce((s, r) => s + r.missingImages.length, 0);
+  const imgPct = matchedTotal > 0 ? Math.round((missingImages / matchedTotal) * 100) : 0;
+
+  console.log(`\n${bar}`);
+  console.log(`  AUDIT SUMMARY`);
+  console.log(bar);
+  console.log(`  Sites: ${results.length}/8  |  Live: ${ok.reduce((s, r) => s + r.liveCount, 0)}  |  DB active: ${ok.reduce((s, r) => s + r.dbCount, 0)}`);
+  console.log(`  Stale in DB: ${ok.reduce((s, r) => s + r.staleInDb.length, 0)}  |  Missing from DB: ${ok.reduce((s, r) => s + r.missingFromDb.length, 0)}`);
+  console.log(`  Missing images: ${missingImages}/${matchedTotal} (${imgPct}%)`);
+  console.log(`  Price mismatches: ${ok.reduce((s, r) => s + r.priceMismatches.length, 0)}  |  End date mismatches: ${ok.reduce((s, r) => s + r.endDateMismatches.length, 0)}`);
+  console.log(`\n  Saved → ${outputPath}`);
+  console.log(bar);
+}
+
+// ── Orchestration ─────────────────────────────────────────────────────────────
+
+async function main(): Promise<void> {
+  console.log('\n════════════════════════════════════════════════════');
+  console.log('  CarRaffleOdds — Data Reconciliation Audit');
+  console.log(`  ${new Date().toISOString()}`);
+  console.log('════════════════════════════════════════════════════');
+
+  const supabase = createServiceClient();
+  const results: SiteAuditResult[] = [];
+
+  const browser = await chromium.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
+  });
+
+  try {
+    for (const site of SITES) {
+      console.log(`\n[Audit] → ${site.name} (${site.listingUrl})`);
+      let siteResult: SiteAuditResult;
+
+      try {
+        const context = await browser.newContext({
+          userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          locale: 'en-GB',
+          timezoneId: 'Europe/London',
+        });
+        const page = await context.newPage();
+        await page.goto(site.listingUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+        await page.waitForTimeout(2000);
+        const html = await page.content();
+        await context.close();
+
+        console.log(`[Audit]   Fetched ${Math.round(html.length / 1000)}k chars — sending to Claude...`);
+        const live = await extractLiveRaffles(html, site.name);
+        console.log(`[Audit]   Claude: ${live.length} live raffles`);
+
+        const db = await fetchDbRaffles(site.slug, supabase);
+        console.log(`[Audit]   DB: ${db.length} active raffles`);
+
+        siteResult = diffRaffles(live, db, site.slug, site.name, site.listingUrl);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error(`[Audit]   FAILED: ${msg}`);
+        siteResult = {
+          slug: site.slug, name: site.name, listingUrl: site.listingUrl,
+          liveCount: 0, dbCount: 0, matchedCount: 0,
+          staleInDb: [], missingFromDb: [], missingImages: [],
+          priceMismatches: [], endDateMismatches: [],
+          error: msg,
+        };
+      }
+
+      printSiteResult(siteResult);
+      results.push(siteResult);
+    }
+  } finally {
+    await browser.close();
+  }
+
+  // Save JSON
+  const outputDir = path.resolve(process.cwd(), 'scripts/audit-output');
+  fs.mkdirSync(outputDir, { recursive: true });
+  const dateStr = new Date().toISOString().slice(0, 10);
+  const outputPath = path.join(outputDir, `audit-${dateStr}.json`);
+
+  const output: AuditOutput = {
+    auditedAt: new Date().toISOString(),
+    sites: results,
+    summary: {
+      sitesAudited: results.filter(r => !r.error).length,
+      totalLive: results.reduce((s, r) => s + r.liveCount, 0),
+      totalDb: results.reduce((s, r) => s + r.dbCount, 0),
+      staleInDb: results.reduce((s, r) => s + r.staleInDb.length, 0),
+      missingFromDb: results.reduce((s, r) => s + r.missingFromDb.length, 0),
+      missingImages: results.reduce((s, r) => s + r.missingImages.length, 0),
+      priceMismatches: results.reduce((s, r) => s + r.priceMismatches.length, 0),
+      endDateMismatches: results.reduce((s, r) => s + r.endDateMismatches.length, 0),
+    },
+  };
+
+  fs.writeFileSync(outputPath, JSON.stringify(output, null, 2));
+  printSummary(results, outputPath);
+}
+
+main().catch(err => {
+  console.error('Fatal:', err);
+  process.exit(1);
+});
