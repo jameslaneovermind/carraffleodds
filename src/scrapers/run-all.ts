@@ -240,7 +240,7 @@ export async function runAllScrapers(options: OrchestratorOptions = {}): Promise
                     }
                     if (metrics.otherTypeRate > 0.60) {
                       qualityIssues.push(`unknown type ${Math.round(metrics.otherTypeRate * 100)}%`);
-                      Sentry.captureMessage(`[${scraper.name}] High unknown prize_type rate`, {
+                      Sentry.captureMessage(`[${scraper.name}] High other/unclassified prize_type rate`, {
                         level: 'warning',
                         tags: { site: scraper.siteSlug },
                         extra: { otherTypeRate: metrics.otherTypeRate, total: result.raffles.length },
@@ -305,11 +305,10 @@ export async function runAllScrapers(options: OrchestratorOptions = {}): Promise
             const elapsed = Math.round((Date.now() - scraperStart) / 1000);
             console.error(`[${scraper.name}] Fatal error after ${elapsed}s: ${msg}`);
 
-            Sentry.captureException(error instanceof Error ? error : new Error(msg), {
-              tags: { site: scraper.siteSlug },
-            });
-
             if (!quick) {
+              Sentry.captureException(error instanceof Error ? error : new Error(msg), {
+                tags: { site: scraper.siteSlug },
+              });
               outcomes.push({
                 name: scraper.name,
                 siteSlug: scraper.siteSlug,
