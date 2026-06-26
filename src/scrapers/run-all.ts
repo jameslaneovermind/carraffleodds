@@ -16,6 +16,8 @@ import path from 'path';
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 import { chromium, Browser, BrowserContext } from 'playwright';
+import * as Sentry from '@sentry/node';
+import { computeQualityMetrics } from './quality-metrics';
 import { createServiceClient } from '../lib/supabase';
 import {
   BaseScraper,
@@ -31,6 +33,33 @@ import { ClickCompetitionsScraper } from './click-competitions';
 import { LuckyDayCompetitionsScraper } from './lucky-day-competitions';
 import { LlfGamesScraper } from './llf-games';
 import { BotbScraper } from './botb';
+
+// ============================================
+// Sentry observability helpers
+// ============================================
+
+interface ScraperOutcome {
+  name: string;
+  siteSlug: string;
+  zeroResults: boolean;
+  qualityFailure: boolean;
+  qualityDetail: string;
+}
+
+function checkAggregateFailures(outcomes: ScraperOutcome[]): void {
+  const failures = outcomes.filter(o => o.zeroResults || o.qualityFailure);
+  if (failures.length >= 2) {
+    Sentry.captureMessage(
+      `${failures.length} scrapers failed or have quality issues on this run`,
+      {
+        level: 'error',
+        extra: {
+          failures: failures.map(f => ({ site: f.siteSlug, reason: f.qualityDetail })),
+        },
+      }
+    );
+  }
+}
 
 // ============================================
 // Registry of all scrapers
@@ -132,6 +161,8 @@ export async function runAllScrapers(options: OrchestratorOptions = {}): Promise
 
   console.log(`[Orchestrator] Running ${scrapers.length} scraper(s): ${scrapers.map(s => s.name).join(', ')}`);
 
+  const outcomes: ScraperOutcome[] = [];
+
   // Create or reuse browser
   const ownBrowser = !options.browser;
   const browser = options.browser ?? await createBrowser();
@@ -188,6 +219,42 @@ export async function runAllScrapers(options: OrchestratorOptions = {}): Promise
                     const { itemsNew, itemsUpdated } = await persistScrapeResult(result, supabase);
                     console.log(`[${scraper.name}] Persisted: ${itemsNew} new, ${itemsUpdated} updated`);
 
+                    const metrics = computeQualityMetrics(result.raffles);
+                    const qualityIssues: string[] = [];
+
+                    if (metrics.imageNullRate > 0.80) {
+                      qualityIssues.push(`image null ${Math.round(metrics.imageNullRate * 100)}%`);
+                      Sentry.captureMessage(`[${scraper.name}] High image null rate`, {
+                        level: 'warning',
+                        tags: { site: scraper.siteSlug },
+                        extra: { imageNullRate: metrics.imageNullRate, total: result.raffles.length },
+                      });
+                    }
+                    if (metrics.priceNullRate > 0.50) {
+                      qualityIssues.push(`price null ${Math.round(metrics.priceNullRate * 100)}%`);
+                      Sentry.captureMessage(`[${scraper.name}] High price null rate`, {
+                        level: 'warning',
+                        tags: { site: scraper.siteSlug },
+                        extra: { priceNullRate: metrics.priceNullRate, total: result.raffles.length },
+                      });
+                    }
+                    if (metrics.otherTypeRate > 0.60) {
+                      qualityIssues.push(`unknown type ${Math.round(metrics.otherTypeRate * 100)}%`);
+                      Sentry.captureMessage(`[${scraper.name}] High unknown prize_type rate`, {
+                        level: 'warning',
+                        tags: { site: scraper.siteSlug },
+                        extra: { otherTypeRate: metrics.otherTypeRate, total: result.raffles.length },
+                      });
+                    }
+
+                    outcomes.push({
+                      name: scraper.name,
+                      siteSlug: scraper.siteSlug,
+                      zeroResults: false,
+                      qualityFailure: qualityIssues.length > 0,
+                      qualityDetail: qualityIssues.join('; '),
+                    });
+
                     await logScrapeRun(scraper.siteSlug, {
                       status: result.errors.length > 0 ? 'partial' : 'success',
                       itemsFound: result.raffles.length,
@@ -197,6 +264,20 @@ export async function runAllScrapers(options: OrchestratorOptions = {}): Promise
                       durationMs: result.duration,
                     }, supabase);
                   } else {
+                    Sentry.captureMessage(`[${scraper.name}] Returned zero results`, {
+                      level: 'warning',
+                      tags: { site: scraper.siteSlug },
+                      extra: { errors: result.errors },
+                    });
+
+                    outcomes.push({
+                      name: scraper.name,
+                      siteSlug: scraper.siteSlug,
+                      zeroResults: true,
+                      qualityFailure: false,
+                      qualityDetail: `Zero results${result.errors.length ? ': ' + result.errors[0] : ''}`,
+                    });
+
                     await logScrapeRun(scraper.siteSlug, {
                       status: 'failed',
                       itemsFound: 0,
@@ -224,6 +305,20 @@ export async function runAllScrapers(options: OrchestratorOptions = {}): Promise
             const elapsed = Math.round((Date.now() - scraperStart) / 1000);
             console.error(`[${scraper.name}] Fatal error after ${elapsed}s: ${msg}`);
 
+            Sentry.captureException(error instanceof Error ? error : new Error(msg), {
+              tags: { site: scraper.siteSlug },
+            });
+
+            if (!quick) {
+              outcomes.push({
+                name: scraper.name,
+                siteSlug: scraper.siteSlug,
+                zeroResults: true,
+                qualityFailure: false,
+                qualityDetail: `Fatal error: ${msg}`,
+              });
+            }
+
             await logScrapeRun(scraper.siteSlug, {
               status: 'failed',
               itemsFound: 0,
@@ -242,6 +337,10 @@ export async function runAllScrapers(options: OrchestratorOptions = {}): Promise
     if (ownBrowser) {
       await browser.close();
     }
+  }
+
+  if (!quick) {
+    checkAggregateFailures(outcomes);
   }
 
   console.log(`\n[Orchestrator] ${mode} complete at ${new Date().toISOString()}\n`);
