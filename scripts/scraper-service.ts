@@ -18,6 +18,8 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 import cron from 'node-cron';
 import { chromium, Browser } from 'playwright';
 import { runAllScrapers, cleanupExpiredRaffles } from '../src/scrapers/run-all';
+import * as Sentry from '@sentry/node';
+import { initSentry } from '../src/lib/sentry';
 
 let browser: Browser | null = null;
 let isRunning = false;
@@ -102,11 +104,25 @@ async function runWithLock(jobName: string, fn: () => Promise<void>): Promise<vo
 }
 
 async function fullScrape(): Promise<void> {
-  await runWithLock('Full Scrape', async () => {
-    const b = await ensureBrowser();
-    await runAllScrapers({ browser: b, concurrency: 3 });
-    await cleanupExpiredRaffles();
-  });
+  const checkInId = Sentry.captureCheckIn(
+    { monitorSlug: 'scraper-full-run', status: 'in_progress' },
+    {
+      schedule: { type: 'crontab', value: '0 */3 * * *' },
+      checkinMargin: 30,
+      maxRuntime: 45,
+      timezone: 'Europe/London',
+    }
+  );
+  try {
+    await runWithLock('Full Scrape', async () => {
+      const b = await ensureBrowser();
+      await runAllScrapers({ browser: b, concurrency: 3 });
+      await cleanupExpiredRaffles();
+    });
+    Sentry.captureCheckIn({ monitorSlug: 'scraper-full-run', status: 'ok', checkInId });
+  } catch {
+    Sentry.captureCheckIn({ monitorSlug: 'scraper-full-run', status: 'error', checkInId });
+  }
 }
 
 async function quickUpdate(): Promise<void> {
@@ -164,11 +180,13 @@ process.on('SIGINT', () => shutdown('SIGINT'));
 
 // Handle uncaught errors gracefully
 process.on('uncaughtException', (error) => {
+  Sentry.captureException(error);
   console.error('[Service] Uncaught exception:', error.message);
   // Don't exit — let PM2 decide
 });
 
 process.on('unhandledRejection', (reason) => {
+  Sentry.captureException(reason instanceof Error ? reason : new Error(String(reason)));
   console.error('[Service] Unhandled rejection:', reason);
 });
 
@@ -193,6 +211,8 @@ async function main(): Promise<void> {
     console.error('  Need: SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL) + SUPABASE_SERVICE_ROLE_KEY');
     process.exit(1);
   }
+
+  initSentry(process.env.SENTRY_DSN);
 
   // Launch browser
   await ensureBrowser();
