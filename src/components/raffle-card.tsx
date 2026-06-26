@@ -59,8 +59,11 @@ export function RaffleCard({ raffle }: RaffleCardProps) {
             }}
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Ticket className="h-12 w-12 text-slate-300" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+            <Ticket className="h-10 w-10 text-slate-300" />
+            <span className="text-[10px] font-semibold tracking-widest text-slate-300 uppercase select-none">
+              CarRaffleOdds
+            </span>
           </div>
         )}
 
