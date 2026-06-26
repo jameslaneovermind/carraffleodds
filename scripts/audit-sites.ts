@@ -81,7 +81,7 @@ const SITES: { slug: string; name: string; listingUrl: string }[] = [
 
 async function extractLiveRaffles(html: string, siteName: string): Promise<LiveRaffle[]> {
   const client = new Anthropic();
-  const truncated = html.slice(0, 100_000);
+  const truncated = html.slice(0, 300_000);
 
   const systemPrompt = `You are extracting raffle listings from HTML for the site "${siteName}".
 Return a JSON array of raffles found on the page.
@@ -99,11 +99,12 @@ Rules:
   const tryParse = async (prompt: string): Promise<LiveRaffle[] | null> => {
     const msg = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 4096,
+      max_tokens: 8192,
       system: systemPrompt,
       messages: [{ role: 'user', content: prompt }],
     });
-    const text = msg.content[0].type === 'text' ? msg.content[0].text.trim() : '';
+    const raw = msg.content[0].type === 'text' ? msg.content[0].text.trim() : '';
+    const text = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
     try {
       const parsed = JSON.parse(text);
       return Array.isArray(parsed) ? (parsed as LiveRaffle[]) : null;
