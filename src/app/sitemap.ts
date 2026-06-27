@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next';
 import { ALL_CATEGORIES } from '@/lib/constants';
 import { getAllSlugs } from '@/lib/reviews';
+import { getAllGuideSlugs } from '@/lib/guides';
 
 const SITE_URL = 'https://www.carraffleodds.com';
 
@@ -46,6 +47,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
+      url: `${SITE_URL}/guides`,
+      lastModified: now,
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+    },
+    {
       url: `${SITE_URL}/about-our-reviews`,
       lastModified: now,
       changeFrequency: 'monthly',
@@ -89,5 +96,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...staticPages, ...categoryPages, ...siteReviewPages];
+  // Guide pages
+  const guidePages: MetadataRoute.Sitemap = getAllGuideSlugs().map((slug) => ({
+    url: `${SITE_URL}/guides/${slug}`,
+    lastModified: now,
+    changeFrequency: 'monthly' as const,
+    priority: 0.6,
+  }));
+
+  return [...staticPages, ...categoryPages, ...siteReviewPages, ...guidePages];
 }

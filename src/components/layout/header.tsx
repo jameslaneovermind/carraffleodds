@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { href: '/raffles/tech', label: 'Tech' },
   { href: '/competitions', label: 'Skill Comps' },
   { href: '/sites', label: 'Sites' },
+  { href: '/guides', label: 'Guides' },
 ];
 
 export function Header() {
