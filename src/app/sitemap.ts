@@ -49,7 +49,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     {
       url: `${SITE_URL}/guides`,
       lastModified: now,
-      changeFrequency: 'weekly' as const,
+      changeFrequency: 'weekly',
       priority: 0.7,
     },
     {

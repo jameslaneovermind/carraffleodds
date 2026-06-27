@@ -70,6 +70,7 @@ export default function GuidePage({ params }: PageProps) {
 
       {/* Prose */}
       <article className="prose-custom space-y-4">
+        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{meta.title}</h1>
         <MDXRemote source={content} />
       </article>
 
@@ -126,7 +127,7 @@ export default function GuidePage({ params }: PageProps) {
 
       {/* Last updated */}
       <p className="mt-10 text-xs text-slate-400 border-t border-slate-100 pt-6">
-        Last updated: {meta.lastUpdated}. Information is correct to the best of our knowledge — verify before acting on it.{' '}
+        Last updated: {new Date(meta.lastUpdated).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}. Information is correct to the best of our knowledge — verify before acting on it.{' '}
         <Link href="/about-our-reviews" className="underline hover:text-slate-600">
           About our reviews
         </Link>
