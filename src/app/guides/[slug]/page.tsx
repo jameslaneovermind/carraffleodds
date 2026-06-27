@@ -5,6 +5,7 @@ import { MDXRemote } from 'next-mdx-remote/rsc';
 import { getGuide, getAllGuideSlugs } from '@/lib/guides';
 import { getReview } from '@/lib/reviews';
 import { BreadcrumbJsonLd, ArticleJsonLd, FaqJsonLd } from '@/components/json-ld';
+import { AuthorByline } from '@/components/AuthorByline';
 
 export const revalidate = 86400;
 
@@ -71,6 +72,7 @@ export default function GuidePage({ params }: PageProps) {
       {/* Prose */}
       <article className="prose-custom space-y-4">
         <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{meta.title}</h1>
+        <AuthorByline lastUpdated={meta.lastUpdated} />
         <MDXRemote source={content} />
       </article>
 
@@ -125,11 +127,15 @@ export default function GuidePage({ params }: PageProps) {
         </section>
       )}
 
-      {/* Last updated */}
+      {/* Footer note */}
       <p className="mt-10 text-xs text-slate-400 border-t border-slate-100 pt-6">
-        Last updated: {new Date(meta.lastUpdated).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}. Information is correct to the best of our knowledge — verify before acting on it.{' '}
+        Information is correct to the best of our knowledge — verify before acting on it.{' '}
         <Link href="/about-our-reviews" className="underline hover:text-slate-600">
           About our reviews
+        </Link>
+        {' · '}
+        <Link href="/methodology" className="underline hover:text-slate-600">
+          How we calculate
         </Link>
         .
       </p>

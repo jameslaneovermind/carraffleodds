@@ -175,9 +175,10 @@ export function ReviewJsonLd({
           description: 'Trustpilot community rating — not an editorial score from CarRaffleOdds',
         },
         author: {
-          '@type': 'Organization',
-          name: 'CarRaffleOdds',
-          url: SITE_URL,
+          '@type': 'Person',
+          name: 'James Lane',
+          url: `${SITE_URL}/methodology`,
+          description: 'Car enthusiast and founder of CarRaffleOdds',
         },
         url: reviewUrl,
       }}
@@ -207,9 +208,10 @@ export function ArticleJsonLd({
         url,
         dateModified: lastUpdated,
         author: {
-          '@type': 'Organization',
-          name: 'CarRaffleOdds',
-          url: SITE_URL,
+          '@type': 'Person',
+          name: 'James Lane',
+          url: `${SITE_URL}/methodology`,
+          description: 'Car enthusiast and founder of CarRaffleOdds',
         },
         publisher: {
           '@type': 'Organization',

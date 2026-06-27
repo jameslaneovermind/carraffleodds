@@ -7,6 +7,7 @@ import { MDXRemote } from 'next-mdx-remote/rsc';
 import { getReview, getAllSlugs } from '@/lib/reviews';
 import { RaffleWidget } from '@/components/sites/RaffleWidget';
 import { BreadcrumbJsonLd, ReviewJsonLd } from '@/components/json-ld';
+import { AuthorByline } from '@/components/AuthorByline';
 
 export const revalidate = 60;
 
@@ -111,6 +112,7 @@ export default function SiteReviewPage({ params }: PageProps) {
 
       {/* Prose */}
       <article className="prose-custom space-y-4">
+        <AuthorByline />
         <MDXRemote source={content} />
       </article>
 
@@ -122,6 +124,10 @@ export default function SiteReviewPage({ params }: PageProps) {
         We may earn commission if you buy tickets via links on this page — it doesn&apos;t affect what we say.{' '}
         <Link href="/about-our-reviews" className="underline hover:text-slate-600">
           About our reviews
+        </Link>
+        {' · '}
+        <Link href="/methodology" className="underline hover:text-slate-600">
+          How we calculate
         </Link>
         . Last research update: June 2026.
       </p>
