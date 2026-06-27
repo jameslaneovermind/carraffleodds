@@ -394,6 +394,7 @@ export class RevCompsScraper extends BaseScraper {
         pageTitle: string;
         endDateStr: string | null;
         totalTicketsStr: string | null;
+        prizeValueNum: number | null;
         cashAlternative: number | null;
         additionalCash: number | null;
         price: string | null;
@@ -410,6 +411,7 @@ export class RevCompsScraper extends BaseScraper {
         // --- Additional Information table ---
         let endDateStr: string | null = null;
         let totalTicketsStr: string | null = null;
+        let prizeValueStr: string | null = null;
 
         document.querySelectorAll('table tr').forEach((row) => {
           const cells = row.querySelectorAll('td, th');
@@ -429,6 +431,13 @@ export class RevCompsScraper extends BaseScraper {
           ) {
             totalTicketsStr = value;
           }
+          if (
+            label.includes('prize value') ||
+            label.includes('total prize') ||
+            label === 'prize'
+          ) {
+            prizeValueStr = value;
+          }
         });
 
         // Fallback date: look for "DD Month YYYY" in body
@@ -439,14 +448,29 @@ export class RevCompsScraper extends BaseScraper {
           endDateStr = dateMatch ? dateMatch[0] : null;
         }
 
+        // --- Prize value from body text (if not in table) ---
+        // Matches: "worth £X", "RRP £X", "valued at £X", "prize value £X"
+        if (!prizeValueStr) {
+          const prizeBodyMatch =
+            body.match(/\bworth\s+(?:approximately\s+)?£([\d,]+)/i) ||
+            body.match(/\bRRP\s*[:\s]+£([\d,]+)/i) ||
+            body.match(/\bvalued?\s+at\s+£([\d,]+)/i) ||
+            body.match(/\bprize\s+value\s*[:\s]+£([\d,]+)/i);
+          if (prizeBodyMatch) prizeValueStr = prizeBodyMatch[1];
+        }
+
+        // Parse prize value (strip commas, convert to number)
+        const prizeValueNum = prizeValueStr
+          ? parseInt(prizeValueStr.replace(/[^0-9]/g, ''), 10)
+          : null;
+
         // --- Cash alternative from description ---
-        // Match "£50,000 CASH ALTERNATIVE" or "£50,000 TAX FREE CASH"
+        // Match "£50,000 CASH ALTERNATIVE", "£50,000 TAX FREE CASH", "take £X cash"
         const cashAltMatch =
-          body.match(
-            /£([\d,]+)\s*(?:TAX\s+FREE\s+)?CASH\s*ALTERNATIVE/i
-          ) ||
+          body.match(/£([\d,]+)\s*(?:TAX\s+FREE\s+)?CASH\s*ALTERNATIVE/i) ||
           body.match(/£([\d,]+)\s*TAX\s+FREE\s+CASH/i) ||
-          body.match(/or\s+£([\d,]+)\s*(?:tax free|cash)/i);
+          body.match(/or\s+£([\d,]+)\s*(?:tax[\s-]free\s+)?cash/i) ||
+          body.match(/take\s+(?:the\s+)?£([\d,]+)\s*cash/i);
         const cashAlternative = cashAltMatch
           ? parseInt(cashAltMatch[1].replace(/,/g, ''), 10)
           : null;
@@ -488,6 +512,7 @@ export class RevCompsScraper extends BaseScraper {
           pageTitle,
           endDateStr,
           totalTicketsStr,
+          prizeValueNum,
           cashAlternative,
           additionalCash,
           price,
@@ -538,6 +563,7 @@ export class RevCompsScraper extends BaseScraper {
         totalTickets,
         ticketsSold,
         percentSold: card.percentSold,
+        prizeValue: data.prizeValueNum ? data.prizeValueNum * 100 : undefined, // pounds → pence
         cashAlternative: data.cashAlternative
           ? data.cashAlternative * 100
           : undefined, // pounds → pence
