@@ -270,15 +270,27 @@ export class ClickCompetitionsScraper extends BaseScraper {
         const cashMatch = bodyText.match(/cash\s*alternative[:\s]*£([\d,]+)/i);
         const cashAltStr = cashMatch ? cashMatch[1] : null;
 
+        // Prize value from body text
+        const prizeMatch =
+          bodyText.match(/\bworth\s+(?:approximately\s+)?£([\d,]+)/i) ||
+          bodyText.match(/\bRRP\s*[:\s]+£([\d,]+)/i) ||
+          bodyText.match(/\bvalued?\s+at\s+£([\d,]+)/i) ||
+          bodyText.match(/\bprize\s+value\s*[:\s]+£([\d,]+)/i);
+        const prizeValueStr = prizeMatch ? prizeMatch[1] : null;
+
         // Draw type — page text reveals "Auto Draw" vs "Live Draw"
         const isLive = /live\s*draw/i.test(bodyText);
         const drawType = isLive ? 'live_draw' : 'auto_draw';
 
-        return { imageUrl, drawDateStr, cashAltStr, drawType };
+        return { imageUrl, drawDateStr, cashAltStr, prizeValueStr, drawType };
       });
 
       const cashAlternative = pageData.cashAltStr
         ? parseInt(pageData.cashAltStr.replace(/,/g, ''), 10) * 100
+        : undefined;
+
+      const prizeValue = pageData.prizeValueStr
+        ? parseInt(pageData.prizeValueStr.replace(/,/g, ''), 10) * 100
         : undefined;
 
       const endDate = pageData.drawDateStr
@@ -298,6 +310,7 @@ export class ClickCompetitionsScraper extends BaseScraper {
         ticketsSold,
         percentSold: comp.visability.percentage ?? undefined,
         cashAlternative,
+        prizeValue,
         endDate,
         drawType: pageData.drawType,
       };

@@ -363,6 +363,14 @@ export class LlfGamesScraper extends BaseScraper {
         const cashMatch = body.match(/cash\s*alternative[:\s]*£([\d,]+)/i);
         const cashAltStr = cashMatch ? '£' + cashMatch[1] : null;
 
+        // Prize value from body text
+        const prizeValueMatch =
+          body.match(/\bworth\s+(?:approximately\s+)?£([\d,]+)/i) ||
+          body.match(/\bRRP\s*[:\s]+£([\d,]+)/i) ||
+          body.match(/\bvalued?\s+at\s+£([\d,]+)/i) ||
+          body.match(/\bprize\s+value\s*[:\s]+£([\d,]+)/i);
+        const prizeValueStr = prizeValueMatch ? prizeValueMatch[1] : null;
+
         // Price: "£0.04 Per Entry" or "TICKETS JUST 5P" or "Entry Just 4p"
         let priceStr: string | null = null;
         const perEntryMatch = body.match(/£([\d.]+)\s*per\s*entry/i);
@@ -386,7 +394,7 @@ export class LlfGamesScraper extends BaseScraper {
 
         return {
           title, totalTicketsStr, drawDateStr, cashAltStr, priceStr,
-          imageUrl, percentStr, isAutomated, ticketsSoldFromRatio,
+          imageUrl, percentStr, isAutomated, ticketsSoldFromRatio, prizeValueStr,
         };
       });
 
@@ -428,6 +436,10 @@ export class LlfGamesScraper extends BaseScraper {
 
       const drawType = pageData.isAutomated ? 'auto_draw' : (card.drawType || 'live_draw');
 
+      const prizeValue = pageData.prizeValueStr
+        ? parseInt(pageData.prizeValueStr.replace(/,/g, ''), 10) * 100
+        : undefined;
+
       return {
         externalId,
         title: this.sanitizeTitle(pageData.title || card.title, card.url),
@@ -438,6 +450,7 @@ export class LlfGamesScraper extends BaseScraper {
         ticketsSold,
         percentSold,
         cashAlternative,
+        prizeValue,
         endDate,
         drawType,
       };
@@ -486,7 +499,7 @@ export class LlfGamesScraper extends BaseScraper {
 
       const day = parseInt(match[1], 10);
       const monthStr = match[2].toLowerCase();
-      let year = match[3] ? parseInt(match[3], 10) : new Date().getFullYear();
+      const year = match[3] ? parseInt(match[3], 10) : new Date().getFullYear();
       let hour = match[4] ? parseInt(match[4], 10) : 21;
       const minute = match[5] ? parseInt(match[5], 10) : 0;
       const ampm = match[6]?.toLowerCase();
@@ -503,11 +516,9 @@ export class LlfGamesScraper extends BaseScraper {
       if (ampm === 'am' && hour === 12) hour = 0;
 
       const result = new Date(year, month, day, hour, minute);
-      // If no year was specified and date is in the past, try next year
-      if (!match[3] && result < new Date()) {
-        year++;
-        return new Date(year, month, day, hour, minute);
-      }
+      // If no year was specified and date is in the past, the draw has ended —
+      // don't invent a future date by bumping to next year.
+      if (!match[3] && result < new Date()) return undefined;
       return result;
     } catch {
       return undefined;

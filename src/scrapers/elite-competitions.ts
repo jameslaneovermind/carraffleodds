@@ -242,6 +242,11 @@ export class EliteCompetitionsScraper extends BaseScraper {
         const priceMatch = body.match(/entry price:\s*([\d.p£]+)/i);
         const cashAltMatch = body.match(/£([\d,]+)\s*cash alternative/i);
         const percentMatch = body.match(/(\d+)%\s*SOLD/i);
+        const prizeValueMatch =
+          body.match(/\bworth\s+(?:approximately\s+)?£([\d,]+)/i) ||
+          body.match(/\bRRP\s*[:\s]+£([\d,]+)/i) ||
+          body.match(/\bvalued?\s+at\s+£([\d,]+)/i) ||
+          body.match(/\bprize\s+value\s*[:\s]+£([\d,]+)/i);
 
         const h1 = document.querySelector('h1');
         const heroImg = document.querySelector('img[src*="competitions/"]');
@@ -254,6 +259,7 @@ export class EliteCompetitionsScraper extends BaseScraper {
           cashAltStr: cashAltMatch ? '£' + cashAltMatch[1] : null,
           percentStr: percentMatch ? percentMatch[1] : null,
           imageUrl: heroImg ? heroImg.getAttribute('src') : null,
+          prizeValueStr: prizeValueMatch ? prizeValueMatch[1] : null,
         };
       });
 
@@ -299,6 +305,10 @@ export class EliteCompetitionsScraper extends BaseScraper {
       // Image — prefer detail page, fallback to card
       const imageUrl = pageData.imageUrl || card.imageUrl;
 
+      const prizeValue = pageData.prizeValueStr
+        ? parseInt(pageData.prizeValueStr.replace(/,/g, ''), 10) * 100
+        : undefined;
+
       return {
         externalId,
         title,
@@ -309,6 +319,7 @@ export class EliteCompetitionsScraper extends BaseScraper {
         ticketsSold,
         percentSold,
         cashAlternative,
+        prizeValue,
         endDate,
         drawType: 'live_draw',
       };

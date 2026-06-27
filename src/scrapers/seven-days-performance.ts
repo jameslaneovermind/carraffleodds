@@ -369,6 +369,14 @@ export class SevenDaysPerformanceScraper extends BaseScraper {
         ? parseInt(cashAltMatch[1].replace(/,/g, ''))
         : null;
 
+      // === Prize value from body text ===
+      const prizeValueMatch =
+        body.match(/\bworth\s+(?:approximately\s+)?£([\d,]+)/i) ||
+        body.match(/\bRRP\s*[:\s]+£([\d,]+)/i) ||
+        body.match(/\bvalued?\s+at\s+£([\d,]+)/i) ||
+        body.match(/\bprize\s+value\s*[:\s]+£([\d,]+)/i);
+      const prizeValueStr = prizeValueMatch ? prizeValueMatch[1] : null;
+
       // === Additional cash ===
       // Pattern: "+ £X,XXX Cash!" or "& £X,XXX Cash!"
       const additionalMatch = pageTitle.match(/[+&]\s*£([\d,]+)\s*Cash/i);
@@ -402,6 +410,7 @@ export class SevenDaysPerformanceScraper extends BaseScraper {
         price,
         cashAlternative,
         additionalCash,
+        prizeValueStr,
         drawType,
         mainImage: mainImgSrc,
       };
@@ -449,6 +458,10 @@ export class SevenDaysPerformanceScraper extends BaseScraper {
     // Additional cash
     const additionalCash = data.additionalCash ? data.additionalCash * 100 : undefined;  // pounds to pence
 
+    const prizeValue = data.prizeValueStr
+      ? parseInt(data.prizeValueStr.replace(/,/g, ''), 10) * 100
+      : undefined;
+
     return {
       externalId,
       title,
@@ -462,6 +475,7 @@ export class SevenDaysPerformanceScraper extends BaseScraper {
       percentSold,
       cashAlternative,
       additionalCash,
+      prizeValue,
       endDate: endDate ?? undefined,
       drawType: data.drawType ?? undefined,
     };

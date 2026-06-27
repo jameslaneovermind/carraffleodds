@@ -364,6 +364,14 @@ export class DreamCarGiveawaysScraper extends BaseScraper {
       const days = closesMatch ? parseInt(closesMatch[1]) : null;
       const hours = closesMatch ? parseInt(closesMatch[2]) : null;
 
+      // === Prize value from body text ===
+      const prizeValueMatch =
+        body.match(/\bworth\s+(?:approximately\s+)?£([\d,]+)/i) ||
+        body.match(/\bRRP\s*[:\s]+£([\d,]+)/i) ||
+        body.match(/\bvalued?\s+at\s+£([\d,]+)/i) ||
+        body.match(/\bprize\s+value\s*[:\s]+£([\d,]+)/i);
+      const prizeValueStr = prizeValueMatch ? prizeValueMatch[1] : null;
+
       // === Main image ===
       const mainImg = document.querySelector('img[src*="media.dreamcargiveaways"]');
       const mainImgSrc = mainImg?.getAttribute('src') || null;
@@ -375,6 +383,7 @@ export class DreamCarGiveawaysScraper extends BaseScraper {
         price,
         cashAlternative: cashAlternative || cashAltFromBody,
         additionalCash,
+        prizeValueStr,
         drawType,
         daysRemaining: days,
         hoursRemaining: hours,
@@ -410,6 +419,10 @@ export class DreamCarGiveawaysScraper extends BaseScraper {
       return null;
     }
 
+    const prizeValue = data.prizeValueStr
+      ? parseInt(data.prizeValueStr.replace(/,/g, ''), 10) * 100
+      : undefined;
+
     return {
       externalId,
       title,
@@ -421,6 +434,7 @@ export class DreamCarGiveawaysScraper extends BaseScraper {
       percentSold,
       cashAlternative: data.cashAlternative ? data.cashAlternative * 100 : undefined, // convert pounds to pence
       additionalCash: data.additionalCash ? data.additionalCash * 100 : undefined,   // convert pounds to pence
+      prizeValue,
       endDate: endDate ?? undefined,
       drawType: data.drawType ?? undefined,
     };
