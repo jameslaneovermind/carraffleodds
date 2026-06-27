@@ -184,3 +184,39 @@ export function ReviewJsonLd({
     />
   );
 }
+
+/**
+ * Article schema — for /guides/[slug] content pages.
+ * Signals article type and modification date to search engines.
+ */
+export function ArticleJsonLd({
+  title,
+  url,
+  lastUpdated,
+}: {
+  title: string;
+  url: string;
+  lastUpdated: string;
+}) {
+  return (
+    <JsonLd
+      data={{
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline: title,
+        url,
+        dateModified: lastUpdated,
+        author: {
+          '@type': 'Organization',
+          name: 'CarRaffleOdds',
+          url: SITE_URL,
+        },
+        publisher: {
+          '@type': 'Organization',
+          name: 'CarRaffleOdds',
+          url: SITE_URL,
+        },
+      }}
+    />
+  );
+}
