@@ -51,26 +51,24 @@ describe('parseRelativeDate', () => {
     expect(parseRelativeDate('TBD')).toBeUndefined();
   });
 
-  it('parses "Ends Sun 1st Jun" correctly', () => {
-    const d = parseRelativeDate('Ends Sun 1st Jun');
+  it('parses a future date correctly', () => {
+    const d = parseRelativeDate('Ends Wed 31st Dec');
     expect(d).toBeInstanceOf(Date);
-    expect(d!.getDate()).toBe(1);
-    expect(d!.getMonth()).toBe(5);  // June = 5 (0-indexed)
+    expect(d!.getDate()).toBe(31);
+    expect(d!.getMonth()).toBe(11); // December = 11 (0-indexed)
     expect(d!.getHours()).toBe(21); // always set to 21:00
   });
 
-  it('parses ordinal "22nd" correctly', () => {
-    const d = parseRelativeDate('Ends Tue 22nd Mar');
+  it('parses ordinal "15th" correctly', () => {
+    const d = parseRelativeDate('Ends Sat 15th Nov');
     expect(d).toBeInstanceOf(Date);
-    expect(d!.getDate()).toBe(22);
-    expect(d!.getMonth()).toBe(2);  // March = 2
+    expect(d!.getDate()).toBe(15);
+    expect(d!.getMonth()).toBe(10); // November = 10
   });
 
-  it('advances year when the date has already passed this year', () => {
-    // Manufacture a date guaranteed to be in the past: Jan 1st.
+  it('returns undefined when the date has already passed this year', () => {
+    // Jan 1st is always in the past by the time any CI runs.
     const d = parseRelativeDate('Ends Wed 1st Jan');
-    expect(d).toBeInstanceOf(Date);
-    const now = new Date();
-    expect(d!.getFullYear()).toBeGreaterThanOrEqual(now.getFullYear());
+    expect(d).toBeUndefined();
   });
 });

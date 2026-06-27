@@ -134,11 +134,13 @@ export function parseRelativeDate(text?: string): Date | undefined {
   if (month === undefined) return undefined;
 
   const now = new Date();
-  let year = now.getFullYear();
+  const year = now.getFullYear();
   const candidate = new Date(year, month, day, 21, 0, 0, 0);
-  if (candidate < now) year++;
+  // If the date has already passed this year, the competition ended — don't
+  // invent a future date by bumping to next year, just return undefined.
+  if (candidate < now) return undefined;
 
-  return new Date(year, month, day, 21, 0, 0, 0);
+  return candidate;
 }
 
 // ============================================
