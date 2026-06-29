@@ -62,12 +62,6 @@ export default async function InsightsHubPage() {
         ]}
       />
 
-      {/* DRAFT BANNER — remove this block when prose has been reviewed */}
-      <div className="mb-8 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
-        <strong>[DRAFT — HUMAN REVIEW REQUIRED]</strong> Editorial prose below has not been reviewed.
-        Remove this banner after editing and approving the content.
-      </div>
-
       <div className="mb-10">
         <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-3">
           UK Car Competition Data & Insights

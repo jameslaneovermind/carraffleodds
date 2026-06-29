@@ -33,12 +33,6 @@ export default async function BestTimeToEnterPage() {
         ]}
       />
 
-      {/* DRAFT BANNER — remove when prose reviewed */}
-      <div className="mb-8 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
-        <strong>[DRAFT — HUMAN REVIEW REQUIRED]</strong> Editorial prose has not been reviewed.
-        Remove this banner after editing and approving the content.
-      </div>
-
       <div className="mb-3">
         <Link href="/insights" className="text-sm text-blue-600 hover:underline">
           ← Data & Insights
