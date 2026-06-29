@@ -98,19 +98,20 @@ export default async function InsightsHubPage() {
           </div>
         </div>
 
-        {/* DRAFT PROSE — replace with real editorial content */}
         <div className="prose prose-slate max-w-none mb-8">
           <p>
-            [DRAFT] This is where the editorial introduction goes. Explain what the data is, how it
-            was collected (scrapers running hourly since February 2026, 8 UK competition sites), and
-            what the key finding is — that most competitions draw before every ticket is sold, which
-            means the true odds for buyers are often better than advertised.
+            We started scraping UK competition sites in February 2026 — recording ticket prices,
+            sell-through rates, and draw outcomes every hour across 8 sites. After several months and
+            more than 133,000 snapshot readings, a clear pattern has emerged: most car competitions
+            draw before every ticket is sold. That means the true odds for buyers are regularly
+            better than the advertised figure, and the gap varies significantly between sites.
           </p>
           <p>
-            [DRAFT] Second paragraph: explain the methodology briefly and honestly. We scrape
-            publicly visible data — ticket counts, sell-through percentages, draw dates. We don&apos;t
-            have access to operator systems. Our data reflects what&apos;s publicly shown at scrape
-            time, not internal records.
+            Everything here is derived from publicly visible data — what the sites display on their
+            own pages. We don&apos;t have access to operator systems or internal records. Our scrapers
+            check each competition every hour, recording the ticket count, sell-through percentage,
+            and status. When a competition changes to &ldquo;drawn&rdquo; or &ldquo;sold out&rdquo;,
+            we record the final state. The analysis below is built on that raw history.
           </p>
           <p className="text-sm text-slate-500">
             18+ only. This data is informational. Past draw patterns do not guarantee future

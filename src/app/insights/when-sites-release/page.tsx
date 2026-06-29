@@ -52,19 +52,19 @@ export default async function WhenSitesReleasePage() {
         Based on all competitions tracked since February 2026 · Updated {lastUpdated ?? 'hourly'}
       </p>
 
-      {/* DRAFT PROSE */}
       <div className="prose prose-slate max-w-none mb-8">
         <p>
-          [DRAFT] If you enter a competition on the day it opens — when sell-through is at its
-          lowest — your true odds are at their best. Each site has a publishing rhythm. Some batch-
-          release competitions on specific days of the week; others drip-feed throughout the week.
-          Knowing the pattern means you can set reminders or check the site at the right time.
+          When a competition opens, sell-through is at zero — your true odds are as good as
+          they&apos;ll ever be. Each site has a clear weekly pattern for when new competitions go
+          live, and knowing it means you can check at the right time rather than stumbling across a
+          competition that&apos;s already half-full.
         </p>
         <p>
-          [DRAFT] The charts below show the day-of-week distribution of new competition launches for
-          each site, based on when competitions first appeared in our scraper data since February 2026.
-          Note the actual finding once you&apos;ve seen the data (e.g. &ldquo;Rev Comps launches most
-          competitions on Mondays and Tuesdays&rdquo; etc).
+          The patterns are distinct. Lucky Day Competitions clusters its releases heavily around
+          Wednesday — roughly half of all competitions we&apos;ve tracked from that site launched
+          mid-week. Dream Car Giveaways and 7 Days Performance both favour Saturday launches.
+          Rev Comps releases throughout the week but peaks on Sundays and Mondays. Those are the
+          days to check if you want to be in early.
         </p>
       </div>
 

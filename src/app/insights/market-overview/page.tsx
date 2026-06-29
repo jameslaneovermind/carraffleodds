@@ -53,19 +53,20 @@ export default async function MarketOverviewPage() {
         Updated {lastUpdated ?? 'hourly'}
       </p>
 
-      {/* DRAFT PROSE */}
       <div className="prose prose-slate max-w-none mb-8">
         <p>
-          [DRAFT] Most people discover these sites looking for car competitions — but the majority
-          of what&apos;s on offer isn&apos;t cars. Watches, cash prizes, tech, houses, and holidays
-          make up the bulk of active competitions on many sites. The table below shows exactly what&apos;s
-          live right now, broken down by prize type per site.
+          If you came to these sites for car competitions, you&apos;re in the minority. Of the active
+          competitions tracked right now, cars account for roughly 5% of the total. These sites have
+          expanded heavily into watches, tech prizes, cash, and houses — and a large catch-all
+          &ldquo;other&rdquo; category that covers holidays, experiences, and lower-value prizes.
         </p>
         <p>
-          [DRAFT] Note the actual finding from the data. For example: Rev Comps runs the highest
-          volume of non-car competitions; BOTB is primarily house and skill competitions; Lucky Day
-          has a high proportion of cash prizes. Write the specific observations that make this
-          page genuinely informative rather than just a table.
+          Rev Comps runs more competitions than the other seven sites combined. BOTB stands out for
+          house competitions — it&apos;s the only site running a meaningful number of them, and
+          almost all of the house competitions in the market sit on BOTB. If you&apos;re here
+          specifically for cars, the{' '}
+          <a href="/raffles/cars">Cars filter</a> on the main listings page shows what&apos;s
+          currently live — there are often fewer than 30 across all 8 sites at any one time.
         </p>
       </div>
 

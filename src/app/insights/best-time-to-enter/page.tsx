@@ -52,21 +52,22 @@ export default async function BestTimeToEnterPage() {
         Based on 133,000+ snapshot readings · Updated {lastUpdated ?? 'hourly'}
       </p>
 
-      {/* DRAFT PROSE */}
       <div className="prose prose-slate max-w-none mb-8">
         <p>
-          [DRAFT] We took an hourly snapshot of every tracked competition — recording how many tickets
-          had sold at each point in time. After 4.5 months and 133,000 readings, a clear pattern
-          emerged. Write the actual finding here once you&apos;ve looked at the chart output and can
-          describe the real curve (e.g. flat for first 3/4 of the run, then sharp uptick in final 7
-          days).
+          Competitions are quiet for most of their run, then see a concentrated surge of ticket sales
+          in the final 24 hours. At one day before close, the average sell-through across all tracked
+          competitions sits at 33.7%. By the time of the draw, that number rises to 62.3% — a
+          28-percentage-point jump in the last day alone. The early weeks of a competition&apos;s
+          run are, on average, slow.
         </p>
         <p>
-          [DRAFT] Second paragraph: what this means practically for entering competitions. If the
-          surge happens in the final 7 days, entering at day 14 gives you similar odds to day 30 but
-          more certainty the draw will happen. If sell-through is flat throughout, the timing
-          argument is weaker and the undersold-at-draw insight (see site comparison) is more
-          relevant.
+          In practical terms: entering a week before a competition closes gives you near-identical
+          odds to entering on the day it launched. The final day is when most sales happen, so getting
+          in before that rush is the better play. The one caveat is sell-out risk — if a competition
+          happens to fill completely before its draw date, entering early protects you from missing it.
+          On current data, that&apos;s the exception rather than the rule. See the{' '}
+          <a href="/insights/site-comparison">site comparison</a> for which sites are most likely to
+          draw before selling out.
         </p>
       </div>
 
