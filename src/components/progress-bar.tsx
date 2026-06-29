@@ -1,7 +1,4 @@
-'use client';
-
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
 
 interface ProgressBarProps {
   percentSold: number;
@@ -31,11 +28,9 @@ export function ProgressBar({ percentSold, className }: ProgressBarProps) {
         <span className="font-medium tabular-nums text-slate-700">{percentSold}% sold</span>
       </div>
       <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
-        <motion.div
+        <div
           className={cn('h-full rounded-full', color)}
-          initial={{ width: 0 }}
-          animate={{ width: `${Math.min(percentSold, 100)}%` }}
-          transition={{ duration: 0.8, ease: 'easeOut' }}
+          style={{ width: `${Math.min(percentSold, 100)}%` }}
         />
       </div>
     </div>
