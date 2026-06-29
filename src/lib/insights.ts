@@ -128,7 +128,7 @@ export async function getSiteComparisonData(): Promise<SiteComparisonRow[]> {
     .in('status', ['drawn', 'sold_out'])
     .not('percent_sold', 'is', null);
   if (error || !data) return [];
-  const filtered = (data as { percent_sold: number; site: { name: string; slug: string; competition_model: string; active: boolean } | null }[])
+  const filtered = (data as unknown as { percent_sold: number; site: { name: string; slug: string; competition_model: string; active: boolean } | null }[])
     .filter(r => r.site?.active && r.site.competition_model !== 'spot_the_ball' && r.percent_sold != null);
   return groupSiteComparisonRows(
     filtered.map(r => ({
@@ -153,7 +153,7 @@ export async function getReleasePatterns(): Promise<ReleasePatternSiteData[]> {
     .select('created_at, site:sites(name, slug, active)')
     .not('created_at', 'is', null);
   if (error || !data) return [];
-  const rows = (data as { created_at: string; site: { name: string; slug: string; active: boolean } | null }[])
+  const rows = (data as unknown as { created_at: string; site: { name: string; slug: string; active: boolean } | null }[])
     .filter(r => r.site?.active)
     .map(r => ({
       name: r.site!.name,
@@ -182,7 +182,7 @@ export async function getMarketBreakdown(): Promise<MarketBreakdownSiteData[]> {
     .select('prize_type, site:sites(name, slug, active)')
     .in('status', ['active', 'ending_soon']);
   if (error || !data) return [];
-  const rows = (data as { prize_type: string | null; site: { name: string; slug: string; active: boolean } | null }[])
+  const rows = (data as unknown as { prize_type: string | null; site: { name: string; slug: string; active: boolean } | null }[])
     .filter(r => r.site?.active)
     .map(r => ({
       name: r.site!.name,

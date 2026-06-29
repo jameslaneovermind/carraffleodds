@@ -78,6 +78,36 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'yearly',
       priority: 0.2,
     },
+    {
+      url: `${SITE_URL}/insights`,
+      lastModified: now,
+      changeFrequency: 'daily' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${SITE_URL}/insights/site-comparison`,
+      lastModified: now,
+      changeFrequency: 'daily' as const,
+      priority: 0.7,
+    },
+    {
+      url: `${SITE_URL}/insights/best-time-to-enter`,
+      lastModified: now,
+      changeFrequency: 'daily' as const,
+      priority: 0.7,
+    },
+    {
+      url: `${SITE_URL}/insights/when-sites-release`,
+      lastModified: now,
+      changeFrequency: 'daily' as const,
+      priority: 0.7,
+    },
+    {
+      url: `${SITE_URL}/insights/market-overview`,
+      lastModified: now,
+      changeFrequency: 'daily' as const,
+      priority: 0.7,
+    },
   ];
 
   // Category pages

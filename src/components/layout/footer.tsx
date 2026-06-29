@@ -39,6 +39,7 @@ export function Footer() {
               <li><Link href="/about-our-reviews" className="text-sm text-slate-500 hover:text-blue-500 transition-colors">About Our Reviews</Link></li>
               <li><Link href="/ending-soon" className="text-sm text-slate-500 hover:text-blue-500 transition-colors">Ending Soon</Link></li>
               <li><Link href="/guides" className="text-sm text-slate-500 hover:text-blue-500 transition-colors">Competition Guides</Link></li>
+              <li><Link href="/insights" className="text-sm text-slate-500 hover:text-blue-500 transition-colors">Data & Insights</Link></li>
               <li><Link href="/guides/are-car-competitions-legit" className="text-sm text-slate-500 hover:text-blue-500 transition-colors">Are They Legit?</Link></li>
               <li><Link href="/guides/free-entry-car-competitions" className="text-sm text-slate-500 hover:text-blue-500 transition-colors">Free Entry Guide</Link></li>
             </ul>
