@@ -158,7 +158,7 @@ function MarketBreakdownTable({
   }
   // Determine which prize types are actually present
   const presentTypes = PRIZE_TYPE_ORDER.filter((pt) => data.some((r) => (r.counts[pt] ?? 0) > 0));
-  const maxCount = Math.max(...data.flatMap((r) => Object.values(r.counts)));
+  const maxCount = Math.max(...data.flatMap((r) => Object.values(r.counts)), 0);
 
   return (
     <div className={cn('overflow-x-auto rounded-xl border border-slate-200', className)}>
