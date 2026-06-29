@@ -12,6 +12,7 @@ import type { Raffle } from '@/lib/types';
 
 interface SkillCompCardProps {
   raffle: Raffle;
+  priority?: boolean;
 }
 
 function getCategoryLabel(category: string | null): string | null {
@@ -30,7 +31,7 @@ function isNew(createdAt: string): boolean {
   return diff < 24 * 60 * 60 * 1000;
 }
 
-export function SkillCompCard({ raffle }: SkillCompCardProps) {
+export function SkillCompCard({ raffle, priority = false }: SkillCompCardProps) {
   const siteName = raffle.site?.name ?? 'Unknown Site';
   const categoryLabel = getCategoryLabel(raffle.car_category ?? raffle.prize_type);
   const endingSoon = isEndingSoon(raffle.end_date);
@@ -49,6 +50,7 @@ export function SkillCompCard({ raffle }: SkillCompCardProps) {
             className="object-cover"
             sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
             unoptimized={imgState === 'unoptimized'}
+            priority={priority && imgState === 'optimized'}
             onError={() => {
               setImgState((prev) => (prev === 'optimized' ? 'unoptimized' : 'failed'));
             }}

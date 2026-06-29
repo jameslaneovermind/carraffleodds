@@ -22,7 +22,7 @@ export function SkillCompGrid({ raffles }: SkillCompGridProps) {
               : { duration: 0 }
           }
         >
-          <SkillCompCard raffle={raffle} />
+          <SkillCompCard raffle={raffle} priority={index < 3} />
         </motion.div>
       ))}
     </div>
