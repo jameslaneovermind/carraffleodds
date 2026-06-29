@@ -8,7 +8,7 @@ import { getValueScore } from '@/lib/utils';
 import type { Raffle } from '@/lib/types';
 
 export const metadata: Metadata = {
-  title: 'CarRaffleOdds — Compare the Best UK Car Raffle Odds',
+  title: { absolute: 'CarRaffleOdds — Compare the Best UK Car Raffle Odds' },
   description:
     'Compare live odds across UK car raffle and competition sites. Find the best deals, track ticket sales, and win your dream car for less. Updated every few hours.',
   alternates: { canonical: '/' },

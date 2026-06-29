@@ -9,7 +9,7 @@ const SITE_URL = 'https://www.carraffleodds.com';
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: 'Best Time to Enter UK Car Competitions — Data — CarRaffleOdds',
+  title: 'Best Time to Enter UK Car Competitions — Timing Data',
   description:
     'When do tickets actually sell? We tracked 133,000 snapshots across 8 UK competition sites. Here\'s what the sell-through curve looks like — and when the rush is real.',
   alternates: { canonical: '/insights/best-time-to-enter' },

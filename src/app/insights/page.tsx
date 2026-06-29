@@ -10,7 +10,7 @@ const SITE_URL = 'https://www.carraffleodds.com';
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: 'UK Car Competition Data & Insights — CarRaffleOdds',
+  title: 'UK Car Competition Data & Insights',
   description:
     'Data from 4.5 months of tracking UK car competition sites: which sites draw with tickets unsold, when to enter for better odds, and how the market works.',
   alternates: { canonical: '/insights' },

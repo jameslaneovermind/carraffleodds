@@ -6,7 +6,7 @@ const SITE_URL = 'https://www.carraffleodds.com';
 const PAGE_URL = `${SITE_URL}/methodology`;
 
 export const metadata: Metadata = {
-  title: 'How We Calculate Odds & Value Score — CarRaffleOdds Methodology',
+  title: 'How We Calculate Odds & Value Score',
   description:
     'How CarRaffleOdds calculates real odds, value score, and expected value for UK car competition tickets. Plain-English explanation of the maths.',
   alternates: { canonical: '/methodology' },

@@ -4,7 +4,7 @@ import { createBrowserClient } from '@/lib/supabase';
 import { OrganizationJsonLd, BreadcrumbJsonLd } from '@/components/json-ld';
 
 export const metadata: Metadata = {
-  title: 'About CarRaffleOdds — Independent UK Raffle Comparison',
+  title: { absolute: 'About CarRaffleOdds — Independent UK Raffle Comparison' },
   description:
     'Learn how CarRaffleOdds works. We independently track and compare odds across UK car raffle sites so you can make informed decisions.',
   alternates: {

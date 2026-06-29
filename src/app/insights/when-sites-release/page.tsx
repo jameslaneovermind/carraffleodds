@@ -9,7 +9,7 @@ const SITE_URL = 'https://www.carraffleodds.com';
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: 'When Do UK Competition Sites Release New Raffles? — CarRaffleOdds',
+  title: 'When Do UK Competition Sites Release New Raffles?',
   description:
     'Each UK competition site has a publishing rhythm. Our data shows which days new competitions typically go live — so you can be first in when sell-through is lowest.',
   alternates: { canonical: '/insights/when-sites-release' },

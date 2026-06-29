@@ -10,7 +10,7 @@ const SITE_URL = 'https://www.carraffleodds.com';
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: 'Which UK Car Competition Sites Draw Before Selling Out? — CarRaffleOdds',
+  title: 'Which UK Car Competition Sites Draw Before Selling Out?',
   description:
     'Data from 321 completed car competitions: which sites draw with tickets still available, and what that means for your real odds vs the advertised figure.',
   alternates: { canonical: '/insights/site-comparison' },

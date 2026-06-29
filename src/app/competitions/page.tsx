@@ -6,7 +6,7 @@ import { SkillCompGrid } from '@/components/skill-comp-grid';
 import type { Raffle, Site } from '@/lib/types';
 
 export const metadata: Metadata = {
-  title: 'Skill Competitions — Spot the Ball & More | CarRaffleOdds',
+  title: 'Skill Competitions — Spot the Ball & More',
   description:
     'Browse skill-based competitions like BOTB Spot the Ball. Compare entry prices, cash alternatives, and prizes. Different from raffles — no fixed odds.',
   alternates: {

@@ -9,7 +9,7 @@ const SITE_URL = 'https://www.carraffleodds.com';
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: 'UK Competition Site Market Overview: Prize Types & Volume — CarRaffleOdds',
+  title: 'UK Competition Site Market Overview: Prize Types & Volume',
   description:
     'UK competition sites offer far more than cars. Here\'s the full prize-type breakdown across 8 sites — cars, cash, watches, tech, houses, and more.',
   alternates: { canonical: '/insights/market-overview' },
