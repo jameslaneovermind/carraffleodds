@@ -13,6 +13,7 @@ import type { Raffle } from '@/lib/types';
 
 interface RaffleCardProps {
   raffle: Raffle;
+  priority?: boolean;
 }
 
 function getCategoryLabel(category: string | null): string | null {
@@ -31,7 +32,7 @@ function isNew(createdAt: string): boolean {
   return diff < 24 * 60 * 60 * 1000;
 }
 
-export function RaffleCard({ raffle }: RaffleCardProps) {
+export function RaffleCard({ raffle, priority = false }: RaffleCardProps) {
   const siteName = raffle.site?.name ?? 'Unknown Site';
   const categoryLabel = getCategoryLabel(raffle.car_category ?? raffle.prize_type);
   const endingSoon = isEndingSoon(raffle.end_date);
@@ -52,6 +53,7 @@ export function RaffleCard({ raffle }: RaffleCardProps) {
             className="object-cover"
             sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
             unoptimized={imgState === 'unoptimized'}
+            priority={priority && imgState === 'optimized'}
             onError={() => {
               // First try failed (optimized) → retry unoptimized (direct load)
               // Second try failed (unoptimized) → show placeholder

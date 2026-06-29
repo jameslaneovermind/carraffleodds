@@ -22,7 +22,7 @@ export function RaffleGrid({ raffles }: RaffleGridProps) {
               : { duration: 0 }
           }
         >
-          <RaffleCard raffle={raffle} />
+          <RaffleCard raffle={raffle} priority={index < 3} />
         </motion.div>
       ))}
     </div>
