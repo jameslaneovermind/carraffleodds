@@ -41,8 +41,8 @@ export async function RaffleWidget({ siteSlug }: RaffleWidgetProps) {
         </p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {raffles.map((raffle) => (
-            <RaffleCard key={raffle.id} raffle={raffle} />
+          {raffles.map((raffle, index) => (
+            <RaffleCard key={raffle.id} raffle={raffle} priority={index === 0} />
           ))}
         </div>
       )}
