@@ -272,46 +272,46 @@ export default async function HomePage() {
           backgroundSize: '20px 20px',
         }} />
         <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 gap-6 sm:grid-cols-4 lg:gap-8">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-6 lg:gap-8">
             {/* Car Raffles */}
-            <div className="relative rounded-2xl border border-white/10 bg-white/[0.05] p-6 backdrop-blur-sm">
-              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/20">
-                <BarChart3 className="h-5 w-5 text-blue-400" />
+            <div className="relative rounded-2xl border border-white/10 bg-white/[0.05] p-4 sm:p-6 backdrop-blur-sm">
+              <div className="mb-2 sm:mb-3 flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-blue-500/20">
+                <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400" />
               </div>
-              <p className="text-3xl font-bold text-white tabular-nums">{carRaffleCount}</p>
-              <p className="mt-1 text-sm text-slate-400">Car Raffles Live</p>
+              <p className="text-2xl sm:text-3xl font-bold text-white tabular-nums">{carRaffleCount}</p>
+              <p className="mt-1 text-xs sm:text-sm text-slate-400">Car Raffles Live</p>
             </div>
             {/* Prize Value */}
-            <div className="relative rounded-2xl border border-white/10 bg-white/[0.05] p-6 backdrop-blur-sm">
-              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/20">
-                <TrendingUp className="h-5 w-5 text-amber-400" />
+            <div className="relative rounded-2xl border border-white/10 bg-white/[0.05] p-4 sm:p-6 backdrop-blur-sm">
+              <div className="mb-2 sm:mb-3 flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-amber-500/20">
+                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-amber-400" />
               </div>
-              <p className="text-3xl font-bold text-white tabular-nums">
+              <p className="text-2xl sm:text-3xl font-bold text-white tabular-nums">
                 &pound;{totalPrizeValuePounds > 1_000_000
                   ? `${(totalPrizeValuePounds / 1_000_000).toFixed(1)}M`
                   : totalPrizeValuePounds.toLocaleString()}
               </p>
-              <p className="mt-1 text-sm text-slate-400">Prize Value Tracked</p>
+              <p className="mt-1 text-xs sm:text-sm text-slate-400">Prize Value Tracked</p>
             </div>
             {/* Tickets */}
-            <div className="relative rounded-2xl border border-white/10 bg-white/[0.05] p-6 backdrop-blur-sm">
-              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/20">
-                <Eye className="h-5 w-5 text-emerald-400" />
+            <div className="relative rounded-2xl border border-white/10 bg-white/[0.05] p-4 sm:p-6 backdrop-blur-sm">
+              <div className="mb-2 sm:mb-3 flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-emerald-500/20">
+                <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-400" />
               </div>
-              <p className="text-3xl font-bold text-white tabular-nums">
+              <p className="text-2xl sm:text-3xl font-bold text-white tabular-nums">
                 {totalTicketsMonitored > 1_000_000
                   ? `${(totalTicketsMonitored / 1_000_000).toFixed(1)}M`
                   : totalTicketsMonitored.toLocaleString()}
               </p>
-              <p className="mt-1 text-sm text-slate-400">Tickets Monitored</p>
+              <p className="mt-1 text-xs sm:text-sm text-slate-400">Tickets Monitored</p>
             </div>
             {/* Frequency */}
-            <div className="relative rounded-2xl border border-white/10 bg-white/[0.05] p-6 backdrop-blur-sm">
-              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-violet-500/20">
-                <RefreshCw className="h-5 w-5 text-violet-400" />
+            <div className="relative rounded-2xl border border-white/10 bg-white/[0.05] p-4 sm:p-6 backdrop-blur-sm">
+              <div className="mb-2 sm:mb-3 flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-violet-500/20">
+                <RefreshCw className="h-4 w-4 sm:h-5 sm:w-5 text-violet-400" />
               </div>
-              <p className="text-3xl font-bold text-white tabular-nums">3h</p>
-              <p className="mt-1 text-sm text-slate-400">Update Frequency</p>
+              <p className="text-2xl sm:text-3xl font-bold text-white tabular-nums">3h</p>
+              <p className="mt-1 text-xs sm:text-sm text-slate-400">Update Frequency</p>
             </div>
           </div>
           {lastUpdated && (

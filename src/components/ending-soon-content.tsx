@@ -191,7 +191,7 @@ export function EndingSoonContent({ raffles, sites }: EndingSoonContentProps) {
       <div className="flex flex-wrap items-center gap-3 mb-8">
         {/* Site filter */}
         <Select value={siteParam ?? 'all'} onValueChange={handleSiteChange}>
-          <SelectTrigger className="w-[180px] h-9 text-sm bg-white">
+          <SelectTrigger className="w-full sm:w-[180px] h-9 text-sm bg-white">
             <SelectValue placeholder="All Sites" />
           </SelectTrigger>
           <SelectContent>

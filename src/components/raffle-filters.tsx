@@ -245,7 +245,7 @@ export function RaffleFilters({ raffles, initialCategory, sites }: RaffleFilters
         <div className="flex flex-wrap items-center gap-3">
           {/* Site filter */}
           <Select value={siteParam ?? 'all'} onValueChange={handleSiteChange}>
-            <SelectTrigger className="w-[180px] h-9 text-sm bg-white">
+            <SelectTrigger className="w-full sm:w-[180px] h-9 text-sm bg-white">
               <SelectValue placeholder="All Sites" />
             </SelectTrigger>
             <SelectContent>
@@ -274,10 +274,10 @@ export function RaffleFilters({ raffles, initialCategory, sites }: RaffleFilters
             )}
           </Button>
 
-          {/* Sort dropdown — right-aligned */}
-          <div className="ml-auto">
+          {/* Sort dropdown — right-aligned on desktop, full-width on mobile */}
+          <div className="w-full sm:w-auto sm:ml-auto">
             <Select value={sortParam} onValueChange={handleSortChange}>
-              <SelectTrigger className="w-[160px] h-9 text-sm bg-white">
+              <SelectTrigger className="w-full sm:w-[160px] h-9 text-sm bg-white">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
