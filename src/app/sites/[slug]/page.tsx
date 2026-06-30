@@ -8,6 +8,7 @@ import { getReview, getAllSlugs } from '@/lib/reviews';
 import { RaffleWidget } from '@/components/sites/RaffleWidget';
 import { BreadcrumbJsonLd, ReviewJsonLd } from '@/components/json-ld';
 import { AuthorByline } from '@/components/AuthorByline';
+import { FreeEntryCard } from '@/components/free-entry-card';
 
 export const revalidate = 60;
 
@@ -118,6 +119,9 @@ export default function SiteReviewPage({ params }: PageProps) {
 
       {/* Raffle widget */}
       <RaffleWidget siteSlug={meta.slug} />
+
+      {/* Free entry details */}
+      <FreeEntryCard siteSlug={meta.slug} />
 
       {/* Footer note */}
       <p className="mt-10 text-xs text-slate-400 border-t border-slate-100 pt-6">
