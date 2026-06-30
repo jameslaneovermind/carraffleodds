@@ -6,6 +6,7 @@ import { getGuide, getAllGuideSlugs } from '@/lib/guides';
 import { getReview } from '@/lib/reviews';
 import { BreadcrumbJsonLd, ArticleJsonLd, FaqJsonLd } from '@/components/json-ld';
 import { AuthorByline } from '@/components/AuthorByline';
+import { FreeEntrySitesTable } from '@/components/free-entry-sites-table';
 
 export const revalidate = 86400;
 
@@ -73,7 +74,7 @@ export default function GuidePage({ params }: PageProps) {
       <article className="prose-custom space-y-4">
         <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{meta.title}</h1>
         <AuthorByline lastUpdated={meta.lastUpdated} />
-        <MDXRemote source={content} />
+        <MDXRemote source={content} components={{ FreeEntrySitesTable }} />
       </article>
 
       {/* FAQ — visible on page, mirrors FaqJsonLd */}
