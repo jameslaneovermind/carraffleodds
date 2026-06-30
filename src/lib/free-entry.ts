@@ -5,7 +5,6 @@ export interface FreeEntrySite {
   postalAddress: string | null;
   entryDeadlineDays: number | null;
   skillQuestionFormat: string | null;
-  emailEntry: boolean;
   lastVerified: string; // 'YYYY-MM'
   notes: string | null;
 }
@@ -18,7 +17,6 @@ export const FREE_ENTRY_SITES: FreeEntrySite[] = [
     postalAddress: 'Unit 6, 7 & 8 Turing Court, Hawking Place, Bispham, Blackpool, FY2 0QW',
     entryDeadlineDays: null,
     skillQuestionFormat: null,
-    emailEntry: false,
     lastVerified: '2026-06',
     notes: null,
   },
@@ -29,7 +27,6 @@ export const FREE_ENTRY_SITES: FreeEntrySite[] = [
     postalAddress: 'Northfield House, Shurdington Road, Bentham, Cheltenham, GL51 4UA',
     entryDeadlineDays: null,
     skillQuestionFormat: null,
-    emailEntry: false,
     lastVerified: '2026-06',
     notes: null,
   },
@@ -40,7 +37,6 @@ export const FREE_ENTRY_SITES: FreeEntrySite[] = [
     postalAddress: 'DCG Ltd, PO Box 2050, Pershore, WR10 9FA',
     entryDeadlineDays: null,
     skillQuestionFormat: null,
-    emailEntry: false,
     lastVerified: '2026-06',
     notes: 'Allows multiple entries per stamp on a sliding scale — cheaper competitions give more entries per stamp. Check T&Cs for the current scale.',
   },
@@ -51,7 +47,6 @@ export const FREE_ENTRY_SITES: FreeEntrySite[] = [
     postalAddress: null,
     entryDeadlineDays: null,
     skillQuestionFormat: null,
-    emailEntry: false,
     lastVerified: '2026-06',
     notes: null,
   },
@@ -62,7 +57,6 @@ export const FREE_ENTRY_SITES: FreeEntrySite[] = [
     postalAddress: '72 Tievecrom Road, Forkhill, Newry, Co. Down, BT35 9RX',
     entryDeadlineDays: null,
     skillQuestionFormat: null,
-    emailEntry: false,
     lastVerified: '2026-06',
     notes: null,
   },
@@ -73,7 +67,6 @@ export const FREE_ENTRY_SITES: FreeEntrySite[] = [
     postalAddress: null,
     entryDeadlineDays: null,
     skillQuestionFormat: null,
-    emailEntry: false,
     lastVerified: '2026-06',
     notes: null,
   },
@@ -84,7 +77,6 @@ export const FREE_ENTRY_SITES: FreeEntrySite[] = [
     postalAddress: 'LLF Games Ltd, Tayfield House, 38 Poole Road, Westbourne, Bournemouth, BH4 9DW',
     entryDeadlineDays: null,
     skillQuestionFormat: null,
-    emailEntry: false,
     lastVerified: '2026-06',
     notes: null,
   },
@@ -95,7 +87,6 @@ export const FREE_ENTRY_SITES: FreeEntrySite[] = [
     postalAddress: null,
     entryDeadlineDays: null,
     skillQuestionFormat: null,
-    emailEntry: false,
     lastVerified: '2026-06',
     notes: "BOTB's Spot the Ball is a skill competition. It operates under the prize competition exemption rather than prize draw rules, so the free entry requirement doesn't apply. No postal entry is available.",
   },
