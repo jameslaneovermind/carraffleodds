@@ -7,12 +7,9 @@ import { cn } from '@/lib/utils';
 import { Logo } from '@/components/logo';
 
 const NAV_ITEMS = [
-  { href: '/raffles', label: 'All Raffles' },
+  { href: '/raffles', label: 'Raffles' },
+  { href: '/draws', label: 'Draws' },
   { href: '/ending-soon', label: 'Ending Soon' },
-  { href: '/raffles/cars', label: 'Cars' },
-  { href: '/raffles/cash', label: 'Cash' },
-  { href: '/raffles/tech', label: 'Tech' },
-  { href: '/competitions', label: 'Skill Comps' },
   { href: '/sites', label: 'Sites' },
   { href: '/guides', label: 'Guides' },
   { href: '/insights', label: 'Insights' },
