@@ -82,6 +82,11 @@ async function getHomeData() {
 
   const carRaffleCount = allRaffles.filter((r) => r.prize_type === 'car').length;
 
+  const twoWeeks = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+  const upcomingCarDrawCount = allRaffles.filter(
+    (r) => r.prize_type === 'car' && r.end_date && new Date(r.end_date) <= twoWeeks
+  ).length;
+
   return {
     totalRaffles,
     totalSites,
@@ -93,6 +98,7 @@ async function getHomeData() {
     totalTicketsMonitored,
     lastUpdated,
     carRaffleCount,
+    upcomingCarDrawCount,
   };
 }
 
@@ -108,6 +114,7 @@ export default async function HomePage() {
     totalTicketsMonitored,
     lastUpdated,
     carRaffleCount,
+    upcomingCarDrawCount,
   } = await getHomeData();
 
   return (
@@ -163,7 +170,7 @@ export default async function HomePage() {
           </div>
 
           {/* Stats bar */}
-          <div className="mt-16 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:max-w-2xl">
+          <div className="mt-16 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:max-w-2xl">
             <div className="rounded-xl border border-white/10 bg-white/5 px-5 py-4 backdrop-blur-sm">
               <p className="text-3xl font-bold text-white tabular-nums">{totalRaffles}</p>
               <p className="mt-1 text-sm text-slate-400">Active Raffles</p>
@@ -173,13 +180,20 @@ export default async function HomePage() {
               <p className="mt-1 text-sm text-slate-400">Sites Tracked</p>
             </div>
             {lowestOdds && (
-              <div className="col-span-2 sm:col-span-1 rounded-xl border border-white/10 bg-white/5 px-5 py-4 backdrop-blur-sm">
+              <div className="rounded-xl border border-white/10 bg-white/5 px-5 py-4 backdrop-blur-sm">
                 <p className="text-3xl font-bold text-emerald-400 tabular-nums">
                   1 in {lowestOdds.toLocaleString()}
                 </p>
                 <p className="mt-1 text-sm text-slate-400">Best Odds Available</p>
               </div>
             )}
+            <Link
+              href="/draws"
+              className="rounded-xl border border-white/10 bg-white/5 px-5 py-4 backdrop-blur-sm hover:bg-white/10 transition-colors"
+            >
+              <p className="text-3xl font-bold text-white tabular-nums">{upcomingCarDrawCount}</p>
+              <p className="mt-1 text-sm text-slate-400">Draws This Fortnight</p>
+            </Link>
           </div>
         </div>
       </section>

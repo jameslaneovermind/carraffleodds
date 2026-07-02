@@ -67,6 +67,16 @@ export default async function BestTimeToEnterPage() {
 
       <SnapshotChart data={timingData} />
 
+      <div className="rounded-xl bg-blue-50 border border-blue-100 p-5 text-sm mt-8 mb-6">
+        <p className="text-slate-700 mb-2">
+          The last day sees the biggest rush. If you want to get in before the surge, check which
+          car draws are coming up in the next fortnight.
+        </p>
+        <Link href="/draws" className="text-blue-600 font-medium hover:underline">
+          View upcoming car draws →
+        </Link>
+      </div>
+
       {/* Methodology */}
       <div className="rounded-xl bg-slate-50 border border-slate-200 p-5 text-sm text-slate-600 mt-10">
         <p className="font-semibold text-slate-700 mb-2">Methodology</p>

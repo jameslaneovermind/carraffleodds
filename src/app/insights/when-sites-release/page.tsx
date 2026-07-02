@@ -64,6 +64,15 @@ export default async function WhenSitesReleasePage() {
 
       <InsightsWidget config={{ type: 'release-patterns' }} className="mb-10" />
 
+      <div className="rounded-xl bg-blue-50 border border-blue-100 p-5 text-sm mb-6">
+        <p className="text-slate-700 mb-2">
+          Know when sites launch new competitions. For what&apos;s drawing soon, see the draw calendar.
+        </p>
+        <Link href="/draws" className="text-blue-600 font-medium hover:underline">
+          View upcoming car draws →
+        </Link>
+      </div>
+
       <div className="rounded-xl bg-slate-50 border border-slate-200 p-5 text-sm text-slate-600">
         <p className="font-semibold text-slate-700 mb-2">Methodology</p>
         <p>
