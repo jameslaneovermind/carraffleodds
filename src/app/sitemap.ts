@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 import { ALL_CATEGORIES } from '@/lib/constants';
 import { getAllSlugs } from '@/lib/reviews';
-import { getAllGuideSlugs } from '@/lib/guides';
+import { getPublishedGuideSlugs } from '@/lib/guides';
 
 const SITE_URL = 'https://www.carraffleodds.com';
 
@@ -139,7 +139,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }));
 
   // Guide pages
-  const guidePages: MetadataRoute.Sitemap = getAllGuideSlugs().map((slug) => ({
+  const guidePages: MetadataRoute.Sitemap = getPublishedGuideSlugs().map((slug) => ({
     url: `${SITE_URL}/guides/${slug}`,
     lastModified: now,
     changeFrequency: 'monthly' as const,

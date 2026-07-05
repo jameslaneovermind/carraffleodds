@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
-import { getAllGuides } from '@/lib/guides';
+import { getPublishedGuides } from '@/lib/guides';
 import { BreadcrumbJsonLd } from '@/components/json-ld';
 
 const SITE_URL = 'https://www.carraffleodds.com';
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 export default function GuidesPage() {
-  const guides = getAllGuides();
+  const guides = getPublishedGuides();
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">

@@ -13,6 +13,8 @@ export interface GuideMeta {
   faqItems: Array<{ question: string; answer: string }>;
   relatedGuides: string[];
   relatedSites: string[];
+  /** Unreviewed draft — excluded from the guides index, sitemap, and direct access until a human approves it. */
+  draft?: boolean;
 }
 
 export interface Guide {
@@ -39,4 +41,14 @@ export function getAllGuides(): Guide[] {
   return getAllGuideSlugs()
     .map((slug) => getGuide(slug))
     .filter((g): g is Guide => g !== null);
+}
+
+export function getPublishedGuideSlugs(): string[] {
+  return getAllGuides()
+    .filter((g) => !g.meta.draft)
+    .map((g) => g.meta.slug);
+}
+
+export function getPublishedGuides(): Guide[] {
+  return getAllGuides().filter((g) => !g.meta.draft);
 }

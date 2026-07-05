@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { MDXRemote } from 'next-mdx-remote/rsc';
-import { getGuide, getAllGuideSlugs } from '@/lib/guides';
+import { getGuide, getPublishedGuideSlugs } from '@/lib/guides';
 import { getReview } from '@/lib/reviews';
 import { BreadcrumbJsonLd, ArticleJsonLd, FaqJsonLd } from '@/components/json-ld';
 import { AuthorByline } from '@/components/AuthorByline';
@@ -17,12 +17,12 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  return getAllGuideSlugs().map((slug) => ({ slug }));
+  return getPublishedGuideSlugs().map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const guide = getGuide(params.slug);
-  if (!guide) return {};
+  if (!guide || guide.meta.draft) return {};
   return {
     title: guide.meta.metaTitle,
     description: guide.meta.metaDescription,
@@ -32,14 +32,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default function GuidePage({ params }: PageProps) {
   const guide = getGuide(params.slug);
-  if (!guide) notFound();
+  if (!guide || guide.meta.draft) notFound();
 
   const { meta, content } = guide;
   const guideUrl = `${SITE_URL}/guides/${meta.slug}`;
 
   const relatedGuideData = meta.relatedGuides
     .map((slug) => getGuide(slug))
-    .filter((g): g is NonNullable<typeof g> => g !== null);
+    .filter((g): g is NonNullable<typeof g> => g !== null && !g.meta.draft);
 
   const relatedSiteData = meta.relatedSites
     .map((slug) => getReview(slug))
