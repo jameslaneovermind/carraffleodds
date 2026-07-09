@@ -16,19 +16,34 @@ other route — scope is the hero/header visual system and the logo.
 
 ## Visual direction
 
-**Base: "B1 — Light Technical."** Same white background as today, same overall
-page structure — no dark hero, no repaint of the whole site. What changes:
-sharper corners (4px radius instead of the current 8–12px) and a more
-structured, deliberate hierarchy in the hero than today's homepage has.
+**Correction from the original brainstorm:** the brainstorming mockups were
+built against a generic white-background assumption, but the actual current
+hero in `src/app/page.tsx` is already a **dark navy gradient**
+(`from-slate-900 via-slate-800 to-blue-900`) with white text, and its headline
+already uses gradient-clip text (`"Best Odds"` in an amber→orange gradient).
+Rather than converting to a light hero (a much bigger change than intended),
+the decision is to **keep the existing dark hero and recolour it in place**:
 
-This was chosen over two alternatives considered and rejected:
+- Remove the gradient-clip text treatment on the "Best Odds" headline —
+  gradient text is explicitly disallowed (see Colour). Replace it with a
+  flat colour instead of a gradient.
+- Use **flat blue-400** for that emphasis word, not amber/orange — orange
+  stays reserved for its existing meanings (logo, ratings, urgency; see
+  Orange/amber below), and blue-400 has enough contrast against the navy
+  background while reinforcing the primary brand colour instead of
+  introducing a second one.
+- Sharper corners (4px radius instead of the current rounded-xl/rounded-lg
+  ~8–12px) on the stat cards and buttons, for the same "more structured, more
+  deliberate" feel the original B1 mockups were going for — applied to the
+  existing dark hero rather than a new light one.
+- Everything else in the hero (dark gradient background, translucent
+  `bg-white/5` stat cards, layout, copy) stays as-is. This is a recolour/
+  detail pass, not a rebuild.
 
-- **"Modern Automotive" as originally mocked** (dark hero, amber accent) —
-  rejected because the dark/amber combination reads closer to a promo or
-  casino site, which conflicts with CLAUDE.md's "18+, honest, responsible"
-  tone rule.
-- **"Editorial/Data-led"** (warm off-white, green accent, serif headline) —
-  viable but a bigger repaint of the existing blue-600 brand than necessary.
+This was chosen over converting to a light hero because it's a smaller, lower-
+risk change that's consistent with what actually exists today, rather than
+one that silently contradicts the "no repaint of the whole site" intent from
+the original brainstorm.
 
 ## Colour
 
