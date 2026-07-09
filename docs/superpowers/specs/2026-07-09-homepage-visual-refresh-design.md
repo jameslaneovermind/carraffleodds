@@ -22,6 +22,7 @@ sharper corners (4px radius instead of the current 8–12px) and a more
 structured, deliberate hierarchy in the hero than today's homepage has.
 
 This was chosen over two alternatives considered and rejected:
+
 - **"Modern Automotive" as originally mocked** (dark hero, amber accent) —
   rejected because the dark/amber combination reads closer to a promo or
   casino site, which conflicts with CLAUDE.md's "18+, honest, responsible"
@@ -75,6 +76,7 @@ Two distinct assets, two distinct jobs — deliberately not interchangeable,
 to avoid diluting brand recognition:
 
 ### 1. Single die — the brand mark
+
 Used everywhere something needs to *identify* the site: nav header, favicon,
 apple-touch-icon, any app-icon slot. One rounded-square die, amber→orange
 diagonal gradient, five evenly-spaced pips in dark rust-brown, no drop shadow,
@@ -92,6 +94,7 @@ checkerboard pattern into the pixels instead of true transparency; this was
 corrected via a flood-fill background removal before use.
 
 ### 2. Two dice — decorative motif only, not a logo
+
 Used in large, one-off, supportive placements — homepage hero artwork next to
 the headline, social share / og:image card, similar marketing contexts. Never
 used anywhere that functions as a clickable "home" icon, and never at nav/
@@ -112,6 +115,7 @@ shadow" prompting or a manual touch-up pass.
 
 Both source assets are raster PNGs at 1254×1254px with true alpha. Before
 these ship:
+
 - Export the single-die mark at the sizes Next.js's icon conventions need
   (`app/icon.png`/`apple-icon.png`, plus a 32×32 favicon) — a flat, simple
   shape like this downsamples cleanly, so no vectorization is required to
