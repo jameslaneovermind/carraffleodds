@@ -44,3 +44,6 @@ next-env.d.ts
 
 # audit output
 scripts/audit-output/*.json
+
+# superpowers brainstorming companion
+/.superpowers/

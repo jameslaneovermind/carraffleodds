@@ -38,6 +38,7 @@ The thing we're testing: does focusing on durable, hand-written content lift org
 - **CON-2 · Trust/legal pillar cluster** — "are car competitions legal / a scam", "how the free entry route works", "what happens when you win". Highest-intent informational queries.
 - **CON-3 · Value/strategy pillar cluster** — "are they worth it", "cash vs car", "best time to enter". Our differentiator as prose.
 - **ENG-5 · Targeted performance / Core Web Vitals** — slot in here; it's a ranking factor that lifts everything published. Mobile-first (78% of traffic).
+- **ENG-7 · AI/LLM discoverability audit** — structured data, `/llms.txt`, AI-crawler allowlist, answer-shaped copy. Cheap, mechanical, and directly targets the channel that's already working (ChatGPT referrals).
 
 **Move-on signal (decision point, ~8–10 weeks in):** check whether organic impressions/clicks and AI-citation referrals are climbing on the new content. If yes → keep going, add CON-4/CON-5, start Phase 3. If flat → reassess before pouring in more hours (this is the honest go/no-go from the business plan).
 

@@ -66,6 +66,18 @@ Priority order is deliberate (see DECISIONS.md): **observability → correctness
 - LCP image optimised on home, `/raffles`, `/sites/[slug]`.
 **Effort:** M
 
+### ENG-7 · AI/LLM discoverability audit (structured data, llms.txt, answer-shaped copy)
+**What:** Site-wide technical pass to make every indexable page identifiable and citable by AI answer engines (ChatGPT, Perplexity, Google AI Overviews). Audit — don't assume — current JSON-LD coverage (`src/components/json-ld.tsx` is already wired into most templates; verify correctness/completeness of Organization, WebSite, Product/Offer, and FAQPage/Article schemas per template). Add a root `/llms.txt` describing the site and what to cite. Update `src/app/robots.ts` to explicitly name the major AI crawlers (GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, PerplexityBot, Google-Extended) rather than relying only on the wildcard `allow: '/'`. Spot-check that above-the-fold value copy and CTAs render in raw server HTML (view-source, not devtools) on home, `/sites/[slug]`, and guide templates. Confirm every indexable template has a non-empty, page-specific meta description.
+**Why:** ChatGPT is already a top-5 referrer (BUSINESS-PLAN.md) — AEO is a live, working channel here, not speculative. An informal audit of comparable small-site launches found most fail on exactly these signals: missing JSON-LD, no llms.txt, unclear above-the-fold CTA, missing meta description — cheap, mechanical fixes with outsized payoff relative to writing more content. This repo already invested in `json-ld.tsx`; this ticket verifies that investment is actually complete on every template rather than assumed, and closes the gaps (llms.txt, explicit AI-crawler allowlist) that don't exist yet.
+**Acceptance:**
+- Every indexable template (`/`, `/raffles`, `/sites/[slug]`, `/guides/[slug]`, `/insights/*`) emits valid JSON-LD (validated at validator.schema.org) with the correct schema type for its content.
+- `/llms.txt` exists at the root describing the site and what to cite.
+- `robots.ts` explicitly lists the major AI crawlers alongside the existing wildcard rule.
+- Above-the-fold headline/value copy and primary CTA are present in raw server HTML (not client-rendered only) on the templates checked.
+- Every indexable template has a non-empty, page-specific meta description.
+**Effort:** S–M
+**Source notes:** `docs/research/ai-search-visibility-audit-notes.md` (informal AI-search-visibility audit of comparable launches — reference for what "invisible to AI search" looks like in practice).
+
 ---
 
 ## Tier 5 — Design polish (mostly deferred)
