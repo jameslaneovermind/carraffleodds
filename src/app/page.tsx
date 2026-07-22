@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Instrument_Sans } from 'next/font/google';
 import Link from 'next/link';
 import { ArrowRight, TrendingUp, Clock, Shield, BarChart3, Eye, RefreshCw, Scale, CheckCircle2, Zap } from 'lucide-react';
 import { createBrowserClient } from '@/lib/supabase';
@@ -15,6 +16,8 @@ export const metadata: Metadata = {
 };
 
 export const revalidate = 300;
+
+const heroHeadlineFont = Instrument_Sans({ subsets: ['latin'], weight: ['700'] });
 
 async function getHomeData() {
   const supabase = createBrowserClient();
@@ -137,11 +140,9 @@ export default async function HomePage() {
               Tracking {totalRaffles} live competitions
             </div>
 
-            <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
+            <h1 className={`${heroHeadlineFont.className} text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl`}>
               Find the{' '}
-              <span className="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
-                Best Odds
-              </span>{' '}
+              <span className="text-blue-400">Best Odds</span>{' '}
               on UK Car Raffles
             </h1>
 
@@ -154,14 +155,14 @@ export default async function HomePage() {
             <div className="mt-8 flex flex-wrap gap-4">
               <Link
                 href="/raffles"
-                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:bg-blue-700 hover:shadow-xl hover:shadow-blue-600/30 hover:-translate-y-0.5"
+                className="inline-flex items-center gap-2 rounded bg-blue-600 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:bg-blue-700 hover:shadow-xl hover:shadow-blue-600/30 hover:-translate-y-0.5"
               >
                 Browse All Raffles
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
                 href="/ending-soon"
-                className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-white/5 px-6 py-3 text-base font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/10 hover:-translate-y-0.5"
+                className="inline-flex items-center gap-2 rounded border border-white/20 bg-white/5 px-6 py-3 text-base font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/10 hover:-translate-y-0.5"
               >
                 <Clock className="h-4 w-4" />
                 Ending Soon
@@ -171,16 +172,16 @@ export default async function HomePage() {
 
           {/* Stats bar */}
           <div className="mt-16 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:max-w-2xl">
-            <div className="rounded-xl border border-white/10 bg-white/5 px-5 py-4 backdrop-blur-sm">
+            <div className="rounded border border-white/10 bg-white/5 px-5 py-4 backdrop-blur-sm">
               <p className="text-3xl font-bold text-white tabular-nums">{totalRaffles}</p>
               <p className="mt-1 text-sm text-slate-400">Active Raffles</p>
             </div>
-            <div className="rounded-xl border border-white/10 bg-white/5 px-5 py-4 backdrop-blur-sm">
+            <div className="rounded border border-white/10 bg-white/5 px-5 py-4 backdrop-blur-sm">
               <p className="text-3xl font-bold text-white tabular-nums">{totalSites}</p>
               <p className="mt-1 text-sm text-slate-400">Sites Tracked</p>
             </div>
             {lowestOdds && (
-              <div className="rounded-xl border border-white/10 bg-white/5 px-5 py-4 backdrop-blur-sm">
+              <div className="rounded border border-white/10 bg-white/5 px-5 py-4 backdrop-blur-sm">
                 <p className="text-3xl font-bold text-emerald-400 tabular-nums">
                   1 in {lowestOdds.toLocaleString()}
                 </p>
@@ -189,7 +190,7 @@ export default async function HomePage() {
             )}
             <Link
               href="/draws"
-              className="rounded-xl border border-white/10 bg-white/5 px-5 py-4 backdrop-blur-sm hover:bg-white/10 transition-colors"
+              className="rounded border border-white/10 bg-white/5 px-5 py-4 backdrop-blur-sm hover:bg-white/10 transition-colors"
             >
               <p className="text-3xl font-bold text-white tabular-nums">{upcomingCarDrawCount}</p>
               <p className="mt-1 text-sm text-slate-400">Draws This Fortnight</p>

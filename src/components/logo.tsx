@@ -19,48 +19,18 @@ export function Logo({ className, showText = true }: LogoProps) {
         className="shrink-0"
         aria-hidden="true"
       >
-        {/* Back die — grouped so rect + dots rotate together */}
-        <g transform="rotate(10 21 13)">
-          <rect
-            x="10"
-            y="2"
-            width="22"
-            height="22"
-            rx="4"
-            fill="url(#dice-gradient-1)"
-          />
-          {/* 5-pip pattern */}
-          <circle cx="15.5" cy="7.5" r="1.7" fill="#1e3a5f" />
-          <circle cx="26.5" cy="7.5" r="1.7" fill="#1e3a5f" />
-          <circle cx="21" cy="13" r="1.7" fill="#1e3a5f" />
-          <circle cx="15.5" cy="18.5" r="1.7" fill="#1e3a5f" />
-          <circle cx="26.5" cy="18.5" r="1.7" fill="#1e3a5f" />
-        </g>
-
-        {/* Front die */}
-        <rect
-          x="2"
-          y="10"
-          width="22"
-          height="22"
-          rx="4"
-          fill="url(#dice-gradient-2)"
-        />
+        <rect x="4" y="4" width="28" height="28" rx="5" fill="url(#dice-gradient)" />
         {/* 5-pip pattern */}
-        <circle cx="7.5" cy="15.5" r="1.8" fill="#1e3a5f" />
-        <circle cx="18.5" cy="15.5" r="1.8" fill="#1e3a5f" />
-        <circle cx="13" cy="21" r="1.8" fill="#1e3a5f" />
-        <circle cx="7.5" cy="26.5" r="1.8" fill="#1e3a5f" />
-        <circle cx="18.5" cy="26.5" r="1.8" fill="#1e3a5f" />
+        <circle cx="10.5" cy="10.5" r="2.2" fill="#7c2d12" />
+        <circle cx="25.5" cy="10.5" r="2.2" fill="#7c2d12" />
+        <circle cx="18" cy="18" r="2.2" fill="#7c2d12" />
+        <circle cx="10.5" cy="25.5" r="2.2" fill="#7c2d12" />
+        <circle cx="25.5" cy="25.5" r="2.2" fill="#7c2d12" />
 
         <defs>
-          <linearGradient id="dice-gradient-1" x1="10" y1="2" x2="32" y2="24" gradientUnits="userSpaceOnUse">
+          <linearGradient id="dice-gradient" x1="4" y1="4" x2="32" y2="32" gradientUnits="userSpaceOnUse">
             <stop stopColor="#fbbf24" />
             <stop offset="1" stopColor="#ea580c" />
-          </linearGradient>
-          <linearGradient id="dice-gradient-2" x1="2" y1="10" x2="24" y2="32" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#f59e0b" />
-            <stop offset="1" stopColor="#dc2626" stopOpacity="0.85" />
           </linearGradient>
         </defs>
       </svg>
