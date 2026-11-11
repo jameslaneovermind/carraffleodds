@@ -61,6 +61,14 @@ This is the historical record. Active alerting on top of it is a separate concer
 ### `raffle_snapshots` — odds-over-time history
 `id, raffle_id, tickets_sold, percent_sold, ticket_price, snapshot_at`. Powers trend/history and any "odds improving/worsening" signal.
 
+### Insights functions (RPC)
+The Supabase REST API returns at most 1,000 rows per request and drops the rest without an error, so insights that summarise whole tables are counted in Postgres and called with `supabase.rpc(...)`:
+
+- `get_timing_analysis()` — sell-through curve from `raffle_snapshots` (`003_insights_functions.sql`).
+- `get_release_patterns()` — raffles per active site and UTC day of week, from `raffles.created_at` (`004_release_patterns_function.sql`).
+
+Migrations are applied by hand in the Supabase SQL editor.
+
 ---
 
 ## Field provenance

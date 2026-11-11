@@ -148,31 +148,12 @@ export async function getTimingData(): Promise<TimingDataPoint[]> {
 
 export async function getReleasePatterns(): Promise<ReleasePatternSiteData[]> {
   const supabase = createBrowserClient();
-  const { data, error } = await supabase
-    .from('raffles')
-    .select('created_at, site:sites(name, slug, active)')
-    .not('created_at', 'is', null);
+  // Counted in Postgres: a table read is capped at 1,000 rows per request with no error.
+  const { data, error } = await supabase.rpc('get_release_patterns');
   if (error || !data) return [];
-  const rows = (data as unknown as { created_at: string; site: { name: string; slug: string; active: boolean } | null }[])
-    .filter(r => r.site?.active)
-    .map(r => ({
-      name: r.site!.name,
-      slug: r.site!.slug,
-      day_of_week: new Date(r.created_at).getUTCDay(),
-      competition_count: 1,
-    }));
-  // Aggregate competition_count per site+day before passing to grouper
-  const aggMap = new Map<string, { name: string; slug: string; day_of_week: number; competition_count: number }>();
-  for (const row of rows) {
-    const key = `${row.slug}-${row.day_of_week}`;
-    const existing = aggMap.get(key);
-    if (existing) {
-      existing.competition_count++;
-    } else {
-      aggMap.set(key, { ...row });
-    }
-  }
-  return groupReleasePatternRows(Array.from(aggMap.values()));
+  return groupReleasePatternRows(
+    data as { name: string; slug: string; day_of_week: number; competition_count: number }[]
+  );
 }
 
 export async function getMarketBreakdown(): Promise<MarketBreakdownSiteData[]> {
